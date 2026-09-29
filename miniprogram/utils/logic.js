@@ -59,12 +59,25 @@ function todayNewAllowance(state, today, remainingPool) {
   const extra = (state.extras && state.extras[today]) || 0;
   const allow = earnedQuota(state, today) + extra - learnedCount(state);
   const cap = dailyQuota(state) * 2 + extra;
-  return Math.max(0, Math.min(allow, cap, remainingPool));
+  const pool = remainingPool == null ? Infinity : remainingPool;
+  let n = Math.max(0, Math.min(allow, cap, pool));
+  // 进度超前（已学 > 累计额度，常见于改过手机系统时间）：累计额度已被吃光，
+  // 此时加量必须硬性生效，否则「今天多背5个」点了没反应。
+  // 用 extraBase 记录首次加量时的已学词数，扣掉本次已用掉的量，避免连点两次一次给 10 个
+  if (n === 0 && extra > 0) {
+    const base = state.extraBase && state.extraBase[today];
+    const used = base == null ? 0 : Math.max(0, learnedCount(state) - base);
+    n = Math.min(Math.max(0, extra - used), pool);
+  }
+  return n;
 }
 // 手动加量：今天多学 n 个新词（仅当日有效，明天自动恢复）
 function addExtra(state, today, n) {
   if (!state.extras) state.extras = {};
   state.extras[today] = (state.extras[today] || 0) + n;
+  // 首次加量时记下已学词数作为基线（进度超前时用于精确计算加量余额）
+  if (!state.extraBase) state.extraBase = {};
+  if (state.extraBase[today] == null) state.extraBase[today] = learnedCount(state);
   return state;
 }
 
@@ -103,6 +116,44 @@ function getTodayPlan(state, allWords, today) {
     remainingPool: remaining,
     doneToday: state.stats.lastDoneDate === today
   };
+}
+
+/* ---------- 排期体检（系统时间被改过时的自救） ---------- */
+// 最近一次到期复习日；全部毕业/无词时返回 null
+function nextDueDate(state) {
+  let min = null;
+  for (const en of Object.keys(state.words)) {
+    const w = state.words[en];
+    if (w.dueDate && w.stage < MAX_STAGE && (min === null || w.dueDate < min)) min = w.dueDate;
+  }
+  return min;
+}
+// 复习排期被推到很远的未来（超过最长间隔 30 天）的词数 —— 只可能因改过系统时间
+function scheduleAheadCount(state, today) {
+  const limit = addDays(today, INTERVALS[INTERVALS.length - 1]);
+  let n = 0;
+  for (const en of Object.keys(state.words)) {
+    const w = state.words[en];
+    if (w.dueDate && w.stage < MAX_STAGE && w.dueDate > limit) n++;
+  }
+  return n;
+}
+// 已学词数超出累计额度的量（>0 说明进度超前，新词会被"欠账抵扣"逻辑卡住）
+function aheadBy(state, today) {
+  return learnedCount(state) - earnedQuota(state, today);
+}
+// 把超前排期拉回：保留 stage/掌握度，仅按当前 stage 从今天重新排下次复习日
+function normalizeSchedule(state, today) {
+  const limit = addDays(today, INTERVALS[INTERVALS.length - 1]);
+  let fixed = 0;
+  for (const en of Object.keys(state.words)) {
+    const w = state.words[en];
+    if (w.dueDate && w.stage < MAX_STAGE && w.dueDate > limit) {
+      w.dueDate = addDays(today, INTERVALS[Math.min(w.stage, INTERVALS.length - 1)]);
+      fixed++;
+    }
+  }
+  return fixed;
 }
 
 /* ---------- 答题结算 ---------- */
@@ -162,5 +213,6 @@ module.exports = {
   dailyQuota, earnedQuota, learnedCount, todayNewAllowance, addExtra,
   dueReviews, pickNewWords, getTodayPlan,
   applyAnswer, markNewWordsLearned, checkIn,
-  masteryOf
+  masteryOf,
+  nextDueDate, scheduleAheadCount, aheadBy, normalizeSchedule
 };

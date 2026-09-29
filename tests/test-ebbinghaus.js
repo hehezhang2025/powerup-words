@@ -173,6 +173,38 @@ ok(p8.newWords.length === 5, "加量可叠加，仍为5");
 p8 = L.getTodayPlan(s8, WORDS, T1);
 ok(p8.newWords.length === 0, "次日加量失效且提前学额度抵扣，新词=0");
 
+/* ---------- 进度超前时加量必须生效（改过系统时间的场景） ---------- */
+section("超前进度下的加量");
+let s10 = L.createInitialState(T0);
+// 模拟调过系统时间：一次学了 60 个词（累计额度才 5），复习日也排到了未来
+L.markNewWordsLearned(s10, WORDS.slice(0, 60).map(w => w.en), T0);
+let p10 = L.getTodayPlan(s10, WORDS, T0);
+ok(p10.newWords.length === 0, "超前60词后今日新词=0，实际:" + p10.newWords.length);
+ok(L.aheadBy(s10, T0) === 55, "超前量=55，实际:" + L.aheadBy(s10, T0));
+L.addExtra(s10, T0, 5);
+p10 = L.getTodayPlan(s10, WORDS, T0);
+ok(p10.newWords.length === 5, "超前时加量仍给5个，实际:" + p10.newWords.length);
+// 学完这 5 个后再加 5，应只再给 5 个（不能一次给 10）
+L.markNewWordsLearned(s10, p10.newWords.map(w => w.en), T0);
+L.addExtra(s10, T0, 5);
+p10 = L.getTodayPlan(s10, WORDS, T0);
+ok(p10.newWords.length === 5, "连点两次各给5个（非10），实际:" + p10.newWords.length);
+
+/* ---------- 排期体检与拉回 ---------- */
+section("排期体检");
+let s11 = L.createInitialState(T0);
+L.markNewWordsLearned(s11, ["hello", "hi"], T0);
+ok(L.nextDueDate(s11) === L.addDays(T0, 1), "下次复习=明天，实际:" + L.nextDueDate(s11));
+ok(L.scheduleAheadCount(s11, T0) === 0, "正常排期不算超前");
+// 人为把复习日推到 60 天后（等价于改过系统时间）
+s11.words["hello"].dueDate = L.addDays(T0, 60);
+ok(L.scheduleAheadCount(s11, T0) === 1, "识别出1个超前排期");
+const fixed = L.normalizeSchedule(s11, T0);
+ok(fixed === 1, "拉回1个，实际:" + fixed);
+ok(s11.words["hello"].stage === 0, "拉回后 stage 不变");
+ok(s11.words["hello"].dueDate === L.addDays(T0, 1), "拉回后从明天复习，实际:" + s11.words["hello"].dueDate);
+ok(L.scheduleAheadCount(s11, T0) === 0, "拉回后无超前");
+
 /* ---------- 打卡幂等（加量后再打卡 streak 不变） ---------- */
 section("打卡幂等");
 let s9 = L.createInitialState(T0);

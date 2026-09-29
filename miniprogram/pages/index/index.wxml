@@ -29,7 +29,8 @@
   <view wx:elif="{{nothingToday}}" class="card center done-card pop">
     <view class="big-emoji">🌈</view>
     <view class="page-title">今天没有到期任务</view>
-    <view class="muted" style="margin-top:10rpx">单词都在乖乖睡觉，明天再来叫醒它们～</view>
+    <view class="muted" style="margin-top:10rpx">单词都在乖乖睡觉，下次复习：{{nextDueText || "暂无安排"}}</view>
+    <view wx:if="{{nextDueText}}" class="muted" style="margin-top:10rpx">想多学点？去「设置 → ⚡ 今日加点量」加 5 个新词。</view>
   </view>
 
   <!-- 今日任务卡 -->

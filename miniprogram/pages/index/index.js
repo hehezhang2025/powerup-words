@@ -12,6 +12,7 @@ Page({
     dailyQuota: 5,
     doneToday: false,
     nothingToday: false, // 没复习也没新词（全部学完且未到期）
+    nextDueText: "",     // 下次复习日期提示（"明天" / "10月5日（6天后）"）
     celebrate: false,
     confetti: []
   },
@@ -41,8 +42,21 @@ Page({
       dailyQuota: plan.dailyQuota,
       // 打卡完成且无任何剩余任务才显示"已完成"（加量后新词出现时可继续学习）
       doneToday: plan.doneToday && plan.reviews.length === 0 && plan.newWords.length === 0,
-      nothingToday: !plan.doneToday && plan.reviews.length === 0 && plan.newWords.length === 0
+      nothingToday: !plan.doneToday && plan.reviews.length === 0 && plan.newWords.length === 0,
+      nextDueText: this.describeNextDue(s)
     });
+  },
+
+  // 下一次复习什么时候：没有到期任务时告诉用户还要等多久（排查"调过系统时间"很有用）
+  describeNextDue(s) {
+    const today = logic.todayStr();
+    const d = logic.nextDueDate(s);
+    if (!d) return "";
+    const gap = logic.daysBetween(today, d);
+    const pretty = Number(d.slice(5, 7)) + "月" + Number(d.slice(8, 10)) + "日";
+    if (gap <= 0) return "今天";
+    if (gap === 1) return "明天";
+    return pretty + "（" + gap + "天后）";
   },
 
   // 点击"开始学习"：初始化今日流程会话

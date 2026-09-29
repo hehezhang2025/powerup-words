@@ -19,11 +19,14 @@ Page({
     resetText: "",
     backupPanel: false,
     backupMode: "",   // "export" | "import"
-    backupText: ""
+    backupText: "",
+    schedAhead: 0,    // 复习排期被推到 30 天以后的词数（改过系统时间的痕迹）
+    aheadBy: 0        // 已学词数比计划超前的量
   },
 
   onShow() {
     const s = getApp().globalData.state;
+    const today = logic.todayStr();
     let graduated = 0;
     for (const en of Object.keys(s.words)) {
       if (s.words[en].stage >= logic.MAX_STAGE) graduated++;
@@ -35,7 +38,28 @@ Page({
       bestStreak: s.stats.bestStreak,
       dayCount: s.stats.days.length,
       learned: Object.keys(s.words).length,
-      graduated
+      graduated,
+      schedAhead: logic.scheduleAheadCount(s, today),
+      aheadBy: Math.max(0, logic.aheadBy(s, today))
+    });
+  },
+
+  // 排期自救：改过系统时间后，复习日被推到很远的未来，导致「今日」长期无任务
+  fixSchedule() {
+    const self = this;
+    wx.showModal({
+      title: "拉回复习排期？",
+      content: "把 " + this.data.schedAhead + " 个被排到很久以后的单词，按各自的掌握进度重新从今天开始排期。已学单词、掌握度、打卡天数都不变，只改下次复习日期。",
+      confirmText: "拉回",
+      cancelText: "取消",
+      success(res) {
+        if (!res.confirm) return;
+        const app = getApp();
+        const n = logic.normalizeSchedule(app.globalData.state, logic.todayStr());
+        app.saveState();
+        self.onShow();
+        wx.showToast({ title: "已修正 " + n + " 个", icon: "success" });
+      }
     });
   },
 
@@ -77,6 +101,41 @@ Page({
         // 不支持分享文件：降级为文本，长按复制
         this.setData({ backupPanel: true, backupMode: "export", backupText: backup.buildText(s) });
       });
+  },
+
+  // ---- 进度备份：一键复制（写入剪贴板） ----
+  // 说明：wx.setClipboardData 属隐私接口，若 mp 后台未声明「剪贴板」，会 fail，此时降级为长按复制
+  openCopyBackup() {
+    const s = getApp().globalData.state;
+    const text = backup.buildText(s);
+    this.setData({ backupPanel: true, backupMode: "export", backupText: text });
+    this.copyBackup(text);
+  },
+  copyBackup(text) {
+    const t = text || this.data.backupText;
+    if (!t) {
+      wx.showToast({ title: "没有可复制的内容", icon: "none" });
+      return;
+    }
+    wx.setClipboardData({
+      data: t,
+      success: () => {
+        wx.showToast({ title: "已复制，去微信里粘贴保存", icon: "none", duration: 2500 });
+      },
+      fail: (err) => {
+        const m = ((err && err.errMsg) || "") + "";
+        if (m.indexOf("scope is not declared") >= 0 || m.indexOf("privacy") >= 0) {
+          wx.showModal({
+            title: "一键复制未开启",
+            content: "本小程序还没声明剪贴板权限。请长按上方文字全选复制；或在 mp 后台「设置 → 服务内容声明 → 用户隐私保护指引」增加“剪贴板”后重新发布即可用按钮。",
+            showCancel: false,
+            confirmText: "知道了"
+          });
+        } else {
+          wx.showToast({ title: "复制失败，请长按文本复制", icon: "none", duration: 2500 });
+        }
+      }
+    });
   },
 
   // ---- 进度备份：导入 ----

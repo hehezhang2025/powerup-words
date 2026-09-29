@@ -21,6 +21,15 @@
     <view class="btn-soft" bindtap="addExtra">➕ 今天多背 5 个单词</view>
   </view>
 
+  <!-- 排期自检：仅在检测到异常时出现 -->
+  <view wx:if="{{schedAhead > 0 || aheadBy > 0}}" class="card">
+    <view class="section-title">🧭 排期自检</view>
+    <view class="muted line" wx:if="{{schedAhead > 0}}">有 {{schedAhead}} 个单词的复习日期被排到 30 天以后，这通常是之前改过手机系统时间留下的，会让「今日」长期显示没有任务。</view>
+    <view class="muted line" wx:if="{{aheadBy > 0}}">已学词数比计划进度超前 {{aheadBy}} 个，新词额度会被抵扣（这就是「多背 5 个」点了没反应的原因）。</view>
+    <view class="muted line">先点「⚡ 今日加点量」即可照常多背；想让复习也恢复正常，用下面的按钮把排期拉回。</view>
+    <view wx:if="{{schedAhead > 0}}" class="btn-soft" bindtap="fixSchedule">🔧 把超前的复习排期拉回今天</view>
+  </view>
+
   <!-- 数据统计 -->
   <view class="card">
     <view class="section-title">📊 学习数据</view>
@@ -45,6 +54,9 @@
     <view class="muted line">学习进度只保存在这台设备上（不联网、不上传）。换手机、或微信清缓存之前，先「导出备份」发到自己的微信里存着；换到新设备后「导入备份」即可接着背。</view>
     <view class="backup-btns">
       <view class="btn-soft" bindtap="exportProgress">📤 导出备份</view>
+      <view class="btn-soft" bindtap="openCopyBackup">📋 复制文本</view>
+    </view>
+    <view class="backup-btns">
       <view class="btn-soft" bindtap="openImport">📥 导入备份</view>
     </view>
   </view>
@@ -73,6 +85,7 @@
       ></textarea>
       <view class="dialog-btns">
         <view class="btn-soft" bindtap="closeBackup">关闭</view>
+        <view wx:if="{{backupMode === 'export'}}" class="btn-soft" bindtap="copyBackup">📋 复制全部</view>
         <view wx:if="{{backupMode === 'import'}}" class="btn-danger" bindtap="doImport">导入并覆盖</view>
       </view>
     </view>
