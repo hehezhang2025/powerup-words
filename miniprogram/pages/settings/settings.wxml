@@ -39,17 +39,43 @@
     <view class="muted line">每天打开先完成到期复习，再学新单词。</view>
   </view>
 
-  <!-- 账号与数据 -->
+  <!-- 进度备份 -->
   <view class="card">
-    <view class="section-title">👤 账号与数据</view>
-    <view class="muted line">当前以微信账号登录，学习进度自动保存在你的微信账号里，换手机/平板打开同一微信即可继续。</view>
+    <view class="section-title">💾 进度备份</view>
+    <view class="muted line">学习进度只保存在这台设备上（不联网、不上传）。换手机、或微信清缓存之前，先「导出备份」发到自己的微信里存着；换到新设备后「导入备份」即可接着背。</view>
+    <view class="backup-btns">
+      <view class="btn-soft" bindtap="exportProgress">📤 导出备份</view>
+      <view class="btn-soft" bindtap="openImport">📥 导入备份</view>
+    </view>
   </view>
 
   <!-- 重置 -->
   <view class="card">
     <view class="section-title">⚠️ 重新开始</view>
-    <view class="muted" style="margin-bottom:20rpx">清空本账号全部学习进度（单词记录、打卡、统计），从第一个单词重新开始。此操作不可恢复。</view>
+    <view class="muted" style="margin-bottom:20rpx">清空这台设备上的全部学习进度（单词记录、打卡、统计），从第一个单词重新开始。此操作不可恢复，建议先导出备份。</view>
     <view class="btn-danger" bindtap="openReset">🗑 重置全部进度</view>
+  </view>
+
+  <!-- 备份面板：导出（文本兜底）/ 导入（粘贴） -->
+  <view wx:if="{{backupPanel}}" class="mask" bindtap="closeBackup">
+    <view class="dialog pop" catchtap="noop">
+      <view class="page-title" style="font-size:38rpx">{{backupMode === 'export' ? '导出进度备份' : '导入进度备份'}}</view>
+      <view class="muted" style="margin:20rpx 0">
+        {{backupMode === 'export' ? '这串文字就是全部进度（已学单词、掌握度、复习排期、打卡天数）。长按全选复制，粘贴到微信「文件传输助手」或收藏里保存好。' : '在微信里打开之前保存的备份，长按全选复制，粘贴到下面，点「导入并覆盖」即可恢复。'}}
+      </view>
+      <textarea
+        class="backup-text"
+        value="{{backupMode === 'export' ? backupText : ''}}"
+        placeholder="{{backupMode === 'import' ? '在此粘贴备份内容' : ''}}"
+        bindinput="onBackupInput"
+        maxlength="-1"
+        show-confirm-bar="{{false}}"
+      ></textarea>
+      <view class="dialog-btns">
+        <view class="btn-soft" bindtap="closeBackup">关闭</view>
+        <view wx:if="{{backupMode === 'import'}}" class="btn-danger" bindtap="doImport">导入并覆盖</view>
+      </view>
+    </view>
   </view>
 
   <!-- 重置确认弹窗 -->

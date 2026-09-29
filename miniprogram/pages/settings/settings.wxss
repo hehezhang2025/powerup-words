@@ -54,3 +54,21 @@
 }
 .dialog-btns { display: flex; gap: 24rpx; }
 .dialog-btns > view { flex: 1; }
+
+/* 进度备份 */
+.backup-btns { display: flex; gap: 24rpx; margin-top: 8rpx; }
+.backup-btns > view { flex: 1; }
+.backup-text {
+  width: 100%;
+  height: 320rpx;
+  box-sizing: border-box;
+  padding: 20rpx 24rpx;
+  margin-bottom: 28rpx;
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: #6B5D4F;
+  background: #F7F1E4;
+  border: 2rpx solid #EFD9B4;
+  border-radius: 16rpx;
+  word-break: break-all;
+}

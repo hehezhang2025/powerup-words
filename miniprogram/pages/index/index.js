@@ -18,10 +18,6 @@ Page({
 
   onShow() {
     const app = getApp();
-    // 云端数据就绪后刷新一次（跨设备同步回来的场景）
-    if (!app.globalData.cloudReady) {
-      app.cloudReadyCallback = () => this.refresh();
-    }
     this.refresh();
     // 从 learn / game 返回时，推进学习流程
     const sess = app.globalData.session;
