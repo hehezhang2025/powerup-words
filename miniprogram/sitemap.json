@@ -1,0 +1,4 @@
+{
+  "desc": "PowerUp 单词冒险",
+  "rules": [{ "action": "allow", "page": "*" }]
+}

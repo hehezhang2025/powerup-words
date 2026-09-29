@@ -1,0 +1,51 @@
+.page { padding-bottom: 60rpx; }
+
+.stat-row { display: flex; }
+.stat { flex: 1; text-align: center; }
+.stat-num { font-size: 52rpx; font-weight: 800; color: #FF7A59; }
+.stat-num.green { color: #3FA34D; }
+
+.tabs { display: flex; gap: 20rpx; margin: 8rpx 24rpx 0; }
+.tab {
+  flex: 1;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #9C8E7E;
+  background: #F7EDD7;
+  border-radius: 999rpx;
+  padding: 18rpx 0;
+}
+.tab.active { color: #fff; background: linear-gradient(135deg, #FF9A3D, #FF7A59); }
+
+.list-card { padding: 8rpx 32rpx; }
+.word-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 0;
+  border-bottom: 2rpx dashed #F0E4CC;
+}
+.word-row:last-child { border-bottom: none; }
+.we { font-size: 36rpx; font-weight: 700; color: #2F6FED; margin-right: 18rpx; }
+.wz { font-size: 30rpx; color: #6B5D4F; }
+.word-side { text-align: right; min-width: 220rpx; }
+.mastery-track {
+  width: 200rpx; height: 14rpx;
+  background: #F3E9D2;
+  border-radius: 999rpx;
+  overflow: hidden;
+  margin-left: auto;
+  margin-bottom: 8rpx;
+}
+.mastery-fill { height: 100%; background: linear-gradient(90deg, #FFD25E, #6BCB77); border-radius: 999rpx; }
+.small { font-size: 22rpx; }
+.badge-done {
+  display: inline-block;
+  font-size: 24rpx;
+  color: #3FA34D;
+  background: #DFF3E1;
+  border-radius: 999rpx;
+  padding: 4rpx 18rpx;
+  margin-bottom: 8rpx;
+}

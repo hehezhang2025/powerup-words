@@ -1,0 +1,36 @@
+{
+  "description": "PowerUp 单词冒险 - 艾宾浩斯背单词小程序",
+  "miniprogramRoot": "miniprogram/",
+  "appid": "wx5df77744ce60752d",
+  "compileType": "miniprogram",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "urlCheck": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "libVersion": "latest",
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "editorSetting": {}
+}

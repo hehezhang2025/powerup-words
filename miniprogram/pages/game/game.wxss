@@ -1,0 +1,50 @@
+.page { padding: 24rpx; }
+
+.top-bar { text-align: center; margin-bottom: 24rpx; }
+.mode-tag {
+  display: inline-block;
+  font-size: 30rpx;
+  font-weight: 700;
+  border-radius: 999rpx;
+  padding: 10rpx 30rpx;
+  margin-bottom: 12rpx;
+}
+.mode-tag.review { color: #4D96FF; background: #E7F0FF; }
+.mode-tag.practice { color: #B07CF6; background: #F1E8FF; }
+
+.board { display: flex; gap: 24rpx; }
+.col { flex: 1; display: flex; flex-direction: column; gap: 24rpx; }
+
+.tile {
+  background: #fff;
+  border-radius: 26rpx;
+  min-height: 150rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16rpx;
+  font-size: 40rpx;
+  font-weight: 700;
+  box-shadow: 0 6rpx 0 rgba(180, 140, 60, 0.18);
+  transition: transform 0.2s, opacity 0.3s;
+  word-break: break-all;
+}
+.tile.en { color: #2F6FED; border: 4rpx solid #BBD3FF; }
+.tile.zh { color: #E2673A; border: 4rpx solid #FFD3B8; }
+.tile.selected {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 8rpx rgba(255, 176, 32, 0.5), 0 6rpx 0 rgba(180, 140, 60, 0.18);
+}
+.tile.gone { opacity: 0; transform: scale(0.5); pointer-events: none; }
+
+.finish { margin-top: 160rpx; }
+.big-emoji { font-size: 120rpx; }
+
+.toast {
+  margin-top: 36rpx;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #FF7A59;
+}
+.tip { margin-top: 28rpx; }

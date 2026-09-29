@@ -1,0 +1,91 @@
+/* 全局样式 · 儿童马卡龙风 */
+page {
+  background: #FFF3D6;
+  color: #4A4036;
+  font-size: 30rpx;
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+}
+
+/* 通用卡片 */
+.card {
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  box-shadow: 0 6rpx 20rpx rgba(180, 140, 60, 0.12);
+  padding: 32rpx;
+  margin: 24rpx;
+}
+
+/* 大按钮 */
+.btn-primary {
+  background: linear-gradient(135deg, #FF9A3D, #FF7A59);
+  color: #fff;
+  font-size: 40rpx;
+  font-weight: 700;
+  border-radius: 999rpx;
+  padding: 28rpx 0;
+  text-align: center;
+  box-shadow: 0 8rpx 0 #E86A2B, 0 12rpx 24rpx rgba(232, 106, 43, 0.35);
+}
+.btn-primary:active { transform: translateY(4rpx); box-shadow: 0 4rpx 0 #E86A2B; }
+
+.btn-soft {
+  background: #FFF;
+  color: #FF8A3D;
+  border: 4rpx solid #FFB27D;
+  font-size: 34rpx;
+  font-weight: 600;
+  border-radius: 999rpx;
+  padding: 22rpx 0;
+  text-align: center;
+}
+.btn-soft:active { background: #FFF0DF; }
+
+.btn-danger {
+  background: #FFF;
+  color: #E5484D;
+  border: 4rpx solid #F1A7AA;
+  font-size: 34rpx;
+  font-weight: 600;
+  border-radius: 999rpx;
+  padding: 22rpx 0;
+  text-align: center;
+}
+
+/* 标题 */
+.page-title { font-size: 46rpx; font-weight: 800; color: #4A4036; }
+.section-title { font-size: 34rpx; font-weight: 700; color: #6B5D4F; margin-bottom: 16rpx; }
+.muted { color: #9C8E7E; font-size: 26rpx; }
+
+/* 通用布局 */
+.row { display: flex; align-items: center; }
+.between { display: flex; align-items: center; justify-content: space-between; }
+.center { text-align: center; }
+
+/* 动画 */
+@keyframes pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.pop { animation: pop 0.35s ease-out; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10rpx); }
+  50% { transform: translateX(10rpx); }
+  75% { transform: translateX(-6rpx); }
+}
+.shake { animation: shake 0.4s ease; }
+
+@keyframes floatDown {
+  0% { transform: translateY(-60rpx) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(600rpx) rotate(360deg); opacity: 0; }
+}
+.confetti-piece {
+  position: fixed;
+  top: 0;
+  font-size: 44rpx;
+  animation: floatDown 1.4s ease-in forwards;
+  pointer-events: none;
+  z-index: 99;
+}

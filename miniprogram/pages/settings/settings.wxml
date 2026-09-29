@@ -1,0 +1,67 @@
+<view class="page">
+
+  <!-- 每周新词量 -->
+  <view class="card">
+    <view class="section-title">🎯 每周新单词目标</view>
+    <view class="muted" style="margin-bottom:20rpx">平均每天 {{weeklyNew / 7}} 个新词，系统自动安排复习</view>
+    <view class="week-grid">
+      <view
+        wx:for="{{weekOptions}}" wx:key="*this"
+        data-v="{{item}}" bindtap="setWeekly"
+        class="week-opt {{weeklyNew === item ? 'active' : ''}}">
+        {{item}} 个
+      </view>
+    </view>
+  </view>
+
+  <!-- 今日加点量 -->
+  <view class="card">
+    <view class="section-title">⚡ 今日加点量</view>
+    <view class="muted" style="margin-bottom:20rpx">今天状态好？临时多背 5 个新词 + 多玩一轮消消乐。明天自动恢复正常节奏，不影响每周目标。{{todayExtra > 0 ? "今天已加 " + todayExtra + " 词" : ""}}</view>
+    <view class="btn-soft" bindtap="addExtra">➕ 今天多背 5 个单词</view>
+  </view>
+
+  <!-- 数据统计 -->
+  <view class="card">
+    <view class="section-title">📊 学习数据</view>
+    <view class="data-row"><text>🔥 当前连续打卡</text><text class="dv">{{streak}} 天</text></view>
+    <view class="data-row"><text>🏅 最长连续打卡</text><text class="dv">{{bestStreak}} 天</text></view>
+    <view class="data-row"><text>📅 累计学习天数</text><text class="dv">{{dayCount}} 天</text></view>
+    <view class="data-row"><text>📖 已学单词</text><text class="dv">{{learned}} / {{total}}</text></view>
+    <view class="data-row"><text>🎓 已毕业单词</text><text class="dv">{{graduated}}</text></view>
+  </view>
+
+  <!-- 遗忘曲线说明 -->
+  <view class="card">
+    <view class="section-title">🧠 背词原理（艾宾浩斯遗忘曲线）</view>
+    <view class="muted line">每个新单词会在学后第 <text class="hl">1、2、4、7、15、30</text> 天自动安排复习。</view>
+    <view class="muted line">答对 → 进入下一个更长的间隔；答错 → 明天优先复习。全部节点通过即「毕业」🎓。</view>
+    <view class="muted line">每天打开先完成到期复习，再学新单词。</view>
+  </view>
+
+  <!-- 账号与数据 -->
+  <view class="card">
+    <view class="section-title">👤 账号与数据</view>
+    <view class="muted line">当前以微信账号登录，学习进度自动保存在你的微信账号里，换手机/平板打开同一微信即可继续。</view>
+  </view>
+
+  <!-- 重置 -->
+  <view class="card">
+    <view class="section-title">⚠️ 重新开始</view>
+    <view class="muted" style="margin-bottom:20rpx">清空本账号全部学习进度（单词记录、打卡、统计），从第一个单词重新开始。此操作不可恢复。</view>
+    <view class="btn-danger" bindtap="openReset">🗑 重置全部进度</view>
+  </view>
+
+  <!-- 重置确认弹窗 -->
+  <view wx:if="{{confirmReset}}" class="mask" bindtap="cancelReset">
+    <view class="dialog pop" catchtap="noop">
+      <view class="page-title" style="font-size:38rpx">确认重置？</view>
+      <view class="muted" style="margin:20rpx 0">将清空全部 {{learned}} 个已学单词与打卡记录。请输入「重置」二字确认：</view>
+      <input class="reset-input" placeholder="输入：重置" value="{{resetText}}" bindinput="onResetInput" />
+      <view class="dialog-btns">
+        <view class="btn-soft" bindtap="cancelReset">取消</view>
+        <view class="btn-danger" bindtap="doReset">确认重置</view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,28 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/learn/learn",
+    "pages/game/game",
+    "pages/words/words",
+    "pages/settings/settings"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#FFF3D6",
+    "navigationBarTitleText": "PowerUp 单词冒险",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FFF3D6"
+  },
+  "tabBar": {
+    "color": "#9C8E7E",
+    "selectedColor": "#FF8A3D",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "🎯 今日" },
+      { "pagePath": "pages/words/words", "text": "📖 词表" },
+      { "pagePath": "pages/settings/settings", "text": "⚙️ 设置" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,46 @@
+.page { padding-bottom: 60rpx; }
+
+.hero { margin-top: 24rpx; }
+.hello { font-size: 42rpx; font-weight: 800; }
+.streak { text-align: center; }
+.fire { font-size: 56rpx; }
+.streak-num { font-size: 48rpx; font-weight: 800; color: #FF6B3D; margin-left: 8rpx; }
+
+.progress-track {
+  margin-top: 24rpx;
+  height: 24rpx;
+  background: #F3E9D2;
+  border-radius: 999rpx;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FFB25E, #FF7A59);
+  border-radius: 999rpx;
+  transition: width 0.4s ease;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 6rpx;
+  border-bottom: 2rpx dashed #F0E4CC;
+}
+.task-emoji { font-size: 52rpx; margin-right: 22rpx; }
+.task-info { flex: 1; }
+.task-name { font-size: 36rpx; font-weight: 700; }
+.task-num {
+  font-size: 44rpx;
+  font-weight: 800;
+  min-width: 90rpx;
+  text-align: center;
+  border-radius: 20rpx;
+  padding: 8rpx 0;
+}
+.task-num.orange { color: #FF7A59; background: #FFE8DC; }
+.task-num.green { color: #3FA34D; background: #DFF3E1; }
+
+.start-btn { margin-top: 36rpx; }
+
+.done-card { margin-top: 60rpx; padding: 70rpx 32rpx; }
+.big-emoji { font-size: 110rpx; margin-bottom: 20rpx; }

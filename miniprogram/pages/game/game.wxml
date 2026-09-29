@@ -1,0 +1,40 @@
+<view class="page">
+  <!-- 顶部进度 -->
+  <view class="top-bar">
+    <view class="mode-tag {{mode}}">{{mode === 'review' ? '🔁 复习模式' : '🎮 巩固模式'}}</view>
+    <view class="muted">第 {{roundNo}} 组 · 已完成 {{doneCount}} / {{totalCount}} 词</view>
+  </view>
+
+  <!-- 完成画面 -->
+  <view wx:if="{{finished}}" class="finish center pop">
+    <view class="big-emoji">🎉</view>
+    <view class="page-title">全部配对成功！</view>
+  </view>
+
+  <block wx:else>
+    <!-- 英文列 / 中文列 -->
+    <view class="board">
+      <view class="col">
+        <view
+          wx:for="{{enTiles}}" wx:key="key"
+          data-type="en" data-index="{{index}}"
+          bindtap="onTile"
+          class="tile en {{item.selected ? 'selected' : ''}} {{item.gone ? 'gone' : ''}} {{item.shake ? 'shake' : ''}}">
+          {{item.text}}
+        </view>
+      </view>
+      <view class="col">
+        <view
+          wx:for="{{zhTiles}}" wx:key="key"
+          data-type="zh" data-index="{{index}}"
+          bindtap="onTile"
+          class="tile zh {{item.selected ? 'selected' : ''}} {{item.gone ? 'gone' : ''}} {{item.shake ? 'shake' : ''}}">
+          {{item.text}}
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{toast}}" class="toast center pop">{{toast}}</view>
+    <view class="muted center tip">👆 点一个英文，再点对应的中文</view>
+  </block>
+</view>

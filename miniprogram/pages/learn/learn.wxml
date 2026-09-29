@@ -1,0 +1,21 @@
+<view class="page">
+  <!-- 进度 -->
+  <view class="progress-line">
+    <view wx:for="{{total}}" wx:for-index="i" wx:key="i"
+      class="dot {{i < index ? 'done' : ''}} {{i === index ? 'cur' : ''}}"></view>
+  </view>
+  <view class="center muted step-text">第 {{index + 1}} / {{total}} 个新单词</view>
+
+  <!-- 单词卡（点击翻面看中文） -->
+  <view class="word-card pop" bindtap="flip">
+    <view class="en">{{word.en}}</view>
+    <view class="speak-btn" catchtap="speak">🔊 点我发音</view>
+    <view wx:if="{{flipped}}" class="zh pop">{{word.zh}}</view>
+    <view wx:else class="hint">👆 点卡片看中文意思</view>
+  </view>
+
+  <!-- 下一个 -->
+  <view class="btn-primary next-btn" bindtap="next">
+    {{index + 1 >= total ? "完成，去巩固 🎮" : "记住了，下一个 👉"}}
+  </view>
+</view>

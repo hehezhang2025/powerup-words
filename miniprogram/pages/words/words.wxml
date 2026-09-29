@@ -1,0 +1,63 @@
+<view class="page">
+  <!-- 统计 -->
+  <view class="card stat-row">
+    <view class="stat">
+      <view class="stat-num">{{learned}}</view>
+      <view class="muted">已学单词</view>
+    </view>
+    <view class="stat">
+      <view class="stat-num green">{{graduated}}</view>
+      <view class="muted">已毕业 🎓</view>
+    </view>
+    <view class="stat">
+      <view class="stat-num">{{total}}</view>
+      <view class="muted">词库总数</view>
+    </view>
+  </view>
+
+  <!-- 分组切换 -->
+  <view class="tabs">
+    <view class="tab {{tab === 'reviewing' ? 'active' : ''}}" data-tab="reviewing" bindtap="switchTab">
+      📖 复习中 ({{reviewing.length}})
+    </view>
+    <view class="tab {{tab === 'done' ? 'active' : ''}}" data-tab="done" bindtap="switchTab">
+      🎓 已毕业 ({{done.length}})
+    </view>
+  </view>
+
+  <!-- 空态 -->
+  <view wx:if="{{learned === 0}}" class="card center muted" style="padding:80rpx 32rpx">
+    还没有学过的单词，先去「今日」开始学习吧～
+  </view>
+
+  <!-- 列表 -->
+  <view class="card list-card" wx:if="{{tab === 'reviewing'}}">
+    <view class="word-row" wx:for="{{reviewing}}" wx:key="en" data-en="{{item.en}}" bindtap="speak">
+      <view class="word-main">
+        <text class="we">{{item.en}}</text>
+        <text class="wz">{{item.zh}}</text>
+      </view>
+      <view class="word-side">
+        <view class="mastery-track">
+          <view class="mastery-fill" style="width: {{item.mastery}}%"></view>
+        </view>
+        <view class="muted small">对{{item.correct}} 错{{item.wrong}} · {{item.dueDate}}复习</view>
+      </view>
+    </view>
+    <view wx:if="{{reviewing.length === 0}}" class="muted center" style="padding:40rpx">没有复习中的单词</view>
+  </view>
+
+  <view class="card list-card" wx:if="{{tab === 'done'}}">
+    <view class="word-row" wx:for="{{done}}" wx:key="en" data-en="{{item.en}}" bindtap="speak">
+      <view class="word-main">
+        <text class="we">{{item.en}}</text>
+        <text class="wz">{{item.zh}}</text>
+      </view>
+      <view class="word-side">
+        <view class="badge-done">🎓 毕业</view>
+        <view class="muted small">答对 {{item.correct}} 次</view>
+      </view>
+    </view>
+    <view wx:if="{{done.length === 0}}" class="muted center" style="padding:40rpx">还没有毕业的单词，加油～</view>
+  </view>
+</view>

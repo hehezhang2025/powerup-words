@@ -1,0 +1,56 @@
+.page { padding-bottom: 60rpx; }
+
+.week-grid { display: flex; flex-wrap: wrap; gap: 20rpx; }
+.week-opt {
+  width: 30%;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #6B5D4F;
+  background: #F7EDD7;
+  border-radius: 20rpx;
+  padding: 24rpx 0;
+}
+.week-opt.active {
+  color: #fff;
+  background: linear-gradient(135deg, #FF9A3D, #FF7A59);
+  box-shadow: 0 6rpx 16rpx rgba(232, 106, 43, 0.3);
+}
+
+.data-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 18rpx 0;
+  font-size: 30rpx;
+  border-bottom: 2rpx dashed #F0E4CC;
+}
+.data-row:last-child { border-bottom: none; }
+.dv { font-weight: 800; color: #FF7A59; }
+
+.line { margin-bottom: 12rpx; line-height: 1.6; }
+.hl { color: #FF7A59; font-weight: 700; }
+
+.mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(60, 40, 20, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.dialog {
+  width: 78vw;
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 44rpx 40rpx;
+}
+.reset-input {
+  background: #F7F1E4;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  font-size: 34rpx;
+  margin: 16rpx 0 32rpx;
+}
+.dialog-btns { display: flex; gap: 24rpx; }
+.dialog-btns > view { flex: 1; }

@@ -1,0 +1,62 @@
+<view class="page">
+
+  <!-- 顶部：打卡与总进度 -->
+  <view class="hero card pop">
+    <view class="between">
+      <view>
+        <view class="hello">今天也要加油鸭！💪</view>
+        <view class="muted">已学会 {{learned}} / {{total}} 个单词</view>
+      </view>
+      <view class="streak">
+        <text class="fire">🔥</text>
+        <text class="streak-num">{{streak}}</text>
+        <view class="muted">连续打卡</view>
+      </view>
+    </view>
+    <view class="progress-track">
+      <view class="progress-fill" style="width: {{total ? learned / total * 100 : 0}}%"></view>
+    </view>
+  </view>
+
+  <!-- 今日已完成 -->
+  <view wx:if="{{doneToday}}" class="card center done-card pop">
+    <view class="big-emoji">🏆</view>
+    <view class="page-title">今日任务完成！</view>
+    <view class="muted" style="margin-top:10rpx">太棒了，明天继续不见不散～</view>
+  </view>
+
+  <!-- 无任务（全部学完且未到期） -->
+  <view wx:elif="{{nothingToday}}" class="card center done-card pop">
+    <view class="big-emoji">🌈</view>
+    <view class="page-title">今天没有到期任务</view>
+    <view class="muted" style="margin-top:10rpx">单词都在乖乖睡觉，明天再来叫醒它们～</view>
+  </view>
+
+  <!-- 今日任务卡 -->
+  <view wx:else class="card task-card pop">
+    <view class="section-title">📅 今日任务</view>
+    <view class="task-row" wx:if="{{reviewCount > 0}}">
+      <text class="task-emoji">🔁</text>
+      <view class="task-info">
+        <view class="task-name">复习旧单词</view>
+        <view class="muted">遗忘曲线到期，先复习</view>
+      </view>
+      <view class="task-num orange">{{reviewCount}}</view>
+    </view>
+    <view class="task-row" wx:if="{{newCount > 0}}">
+      <text class="task-emoji">✨</text>
+      <view class="task-info">
+        <view class="task-name">学习新单词</view>
+        <view class="muted">每天 {{dailyQuota}} 个，循序渐进</view>
+      </view>
+      <view class="task-num green">{{newCount}}</view>
+    </view>
+    <view class="btn-primary start-btn" bindtap="startFlow">🚀 开始学习</view>
+  </view>
+
+  <!-- 撒花 -->
+  <block wx:if="{{celebrate}}">
+    <view wx:for="{{confetti}}" wx:key="index" class="confetti-piece"
+      style="left: {{item.left}}; animation-delay: {{item.delay}}">{{item.icon}}</view>
+  </block>
+</view>
