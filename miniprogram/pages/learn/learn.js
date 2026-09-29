@@ -3,6 +3,8 @@ const tts = require("../../utils/tts.js");
 const { WORDS } = require("../../data/words.js");
 
 Page({
+  finished: false, // 是否走完正常流程（finish 置位）；中途返回时不置位
+
   data: {
     word: null,      // 当前词
     index: 0,
@@ -16,11 +18,28 @@ Page({
     const plan = logic.getTodayPlan(s, WORDS, today);
     this.newWords = plan.newWords;
     if (!this.newWords.length) {
-      wx.navigateBack();
+      this.backSafe();
       return;
     }
     this.setData({ total: this.newWords.length });
     this.showWord(0);
+  },
+
+  // 安全返回：有上一页就返回；无上一页（如审核直达本页）则回首页
+  backSafe() {
+    wx.navigateBack({
+      fail: () => wx.switchTab({ url: "/pages/index/index" })
+    });
+  },
+
+  // 中途退出（点导航栏返回/物理返回）：结束本次流程会话。
+  // 否则返回首页后 onShow 里的 inFlow 检查会立刻 nextStep 把人推回本页，
+  // 返回键看起来就是"点了没反应"（微信审核驳回的原因）
+  onUnload() {
+    if (!this.finished) {
+      const sess = getApp().globalData.session;
+      if (sess) sess.inFlow = false;
+    }
   },
 
   showWord(i) {
@@ -48,6 +67,7 @@ Page({
   },
 
   finish() {
+    this.finished = true; // 正常完成：返回后由首页 onShow 自动衔接巩固环节
     // 登记今日新词（stage 0，明天开始复习）
     const s = getApp().globalData.state;
     const today = logic.todayStr();
@@ -58,6 +78,6 @@ Page({
       sess.learnDone = true;
     }
     getApp().saveState();
-    wx.navigateBack();
+    this.backSafe();
   }
 });

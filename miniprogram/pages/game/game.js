@@ -15,6 +15,8 @@ function shuffle(arr) {
 }
 
 Page({
+  flowDone: false, // 本环节是否走完（finishAll 置位）；中途返回时不置位
+
   data: {
     mode: "review",
     enTiles: [],
@@ -41,7 +43,7 @@ Page({
       const sess = app.globalData.session || {};
       this.queue = (sess.practicedEns || []).slice();
     }
-    if (!this.queue.length) { wx.navigateBack(); return; }
+    if (!this.queue.length) { this.backSafe(); return; }
     tts.preload(this.queue); // 预下载本局词的发音，配对点击秒出声
 
     this.passed = {};   // 已配对成功的 en
@@ -188,6 +190,7 @@ Page({
   },
 
   finishAll() {
+    this.flowDone = true; // 正常完成：返回后由首页 onShow 自动衔接下一步
     // 通知首页：本步骤真正完成（中途退出则不会置位，返回后重新进入本步骤）
     const sess = getApp().globalData.session;
     if (sess) {
@@ -195,9 +198,22 @@ Page({
       else sess.practiceDone = true;
     }
     this.setData({ finished: true });
-    setTimeout(() => wx.navigateBack(), 1200);
+    setTimeout(() => this.backSafe(), 1200);
   },
 
-  // 中途退出：已答的已记录，剩余保留到明天（复习词未处理仍到期）
-  onUnload() {}
+  // 安全返回：有上一页就返回；无上一页（如审核直达本页）则回首页
+  backSafe() {
+    wx.navigateBack({
+      fail: () => wx.switchTab({ url: "/pages/index/index" })
+    });
+  },
+
+  // 中途退出（点导航栏返回/物理返回）：结束本次流程会话，
+  // 否则返回首页后 onShow 的 inFlow 检查会立刻 nextStep 把人推回本页，返回键形同虚设
+  onUnload() {
+    if (!this.flowDone) {
+      const sess = getApp().globalData.session;
+      if (sess) sess.inFlow = false;
+    }
+  }
 });
