@@ -17,6 +17,18 @@
   box-shadow: 0 6rpx 16rpx rgba(232, 106, 43, 0.3);
 }
 
+/* 自定义每周目标 / 撤销加量行 */
+.week-custom { display: flex; align-items: center; gap: 20rpx; margin-top: 20rpx; }
+.week-input {
+  flex: 1;
+  background: #F7F1E4;
+  border-radius: 16rpx;
+  padding: 18rpx 24rpx;
+  font-size: 30rpx;
+  color: #4A4036;
+}
+.week-save { flex: none; width: 160rpx; margin: 0; }
+
 .data-row {
   display: flex;
   justify-content: space-between;

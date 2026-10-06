@@ -9,6 +9,7 @@ Page({
     total: 0,
     reviewCount: 0,
     newCount: 0,
+    extraCount: 0,   // 今日新词里属于「加量」的个数
     dailyQuota: 5,
     doneToday: false,
     nothingToday: false, // 没复习也没新词（全部学完且未到期）
@@ -40,6 +41,7 @@ Page({
       learned: logic.learnedInPool(s, WORDS),
       reviewCount: plan.reviews.length,
       newCount: plan.newWords.length,
+      extraCount: plan.extraCount || 0,
       dailyQuota: plan.dailyQuota,
       // 打卡完成且无任何剩余任务才显示"已完成"（加量后新词出现时可继续学习）
       doneToday: plan.doneToday && plan.reviews.length === 0 && plan.newWords.length === 0,

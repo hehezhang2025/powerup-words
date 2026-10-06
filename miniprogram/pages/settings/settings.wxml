@@ -25,7 +25,9 @@
   <!-- 每周新词量 -->
   <view class="card">
     <view class="section-title">🎯 每周新单词目标</view>
-    <view class="muted" style="margin-bottom:20rpx">平均每天 {{weeklyNew / 7}} 个新词，系统自动安排复习</view>
+    <view class="muted" style="margin-bottom:20rpx">
+      当前目标 <text class="hl">{{weeklyNew}}</text> 个/周，即每天 <text class="hl">{{dailyNew}}</text> 个新词，系统自动安排复习。
+    </view>
     <view class="week-grid">
       <view
         wx:for="{{weekOptions}}" wx:key="*this"
@@ -34,13 +36,31 @@
         {{item}} 个
       </view>
     </view>
+    <view class="week-custom">
+      <input class="week-input" type="number" placeholder="自定义（1~280）" value="{{weekInput}}" bindinput="onWeekInput" />
+      <view class="btn-soft week-save" bindtap="applyCustomWeekly">保存</view>
+    </view>
+    <view wx:if="{{restWords > 0}}" class="muted" style="margin-top:16rpx">
+      按当前目标，剩下 {{restWords}} 个新词约 <text class="hl">{{weeksLeft}}</text> 周学完（{{bankCount}} 套词库共 {{total}} 词）。
+    </view>
+    <view wx:else class="muted" style="margin-top:16rpx">当前词库已全部开始学习，接下来主要是复习巩固。</view>
   </view>
 
   <!-- 今日加点量 -->
   <view class="card">
     <view class="section-title">⚡ 今日加点量</view>
-    <view class="muted" style="margin-bottom:20rpx">今天状态好？临时多背 5 个新词 + 多玩一轮消消乐。明天自动恢复正常节奏，不影响每周目标。{{todayExtra > 0 ? "今天已加 " + todayExtra + " 词" : ""}}</view>
-    <view class="btn-soft" bindtap="addExtra">➕ 今天多背 5 个单词</view>
+    <view class="muted" style="margin-bottom:20rpx">今天状态好？临时多背几个新词。加量背掉的词<text class="hl">不会占用明后天的额度</text>——明天照常按每周目标来，等于白捡。</view>
+    <view class="week-grid">
+      <view
+        wx:for="{{extraOptions}}" wx:key="*this"
+        data-n="{{item}}" bindtap="addExtra"
+        class="week-opt">➕ {{item}} 个</view>
+    </view>
+    <view wx:if="{{todayExtra > 0}}" class="week-custom">
+      <view class="muted" style="flex:1">今天已加 <text class="hl">{{todayExtra}}</text> 个，回「今日」就能背。</view>
+      <view class="btn-soft week-save" bindtap="undoExtra">撤销</view>
+    </view>
+    <view wx:else class="muted" style="margin-top:16rpx">可以连点累加，比如 5+5=10 个；只今天有效。</view>
   </view>
 
   <!-- 排期自检：仅在检测到异常时出现 -->

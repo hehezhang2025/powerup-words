@@ -30,7 +30,7 @@
     <view class="big-emoji">🌈</view>
     <view class="page-title">今天没有到期任务</view>
     <view class="muted" style="margin-top:10rpx">单词都在乖乖睡觉，下次复习：{{nextDueText || "暂无安排"}}</view>
-    <view wx:if="{{nextDueText}}" class="muted" style="margin-top:10rpx">想多学点？去「设置 → ⚡ 今日加点量」加 5 个新词。</view>
+    <view wx:if="{{nextDueText}}" class="muted" style="margin-top:10rpx">想多学点？去「设置 → ⚡ 今日加点量」临时加 5~20 个新词。</view>
   </view>
 
   <!-- 今日任务卡 -->
@@ -48,7 +48,7 @@
       <text class="task-emoji">✨</text>
       <view class="task-info">
         <view class="task-name">学习新单词</view>
-        <view class="muted">每天 {{dailyQuota}} 个，循序渐进</view>
+        <view class="muted">每天 {{dailyQuota}} 个{{extraCount > 0 ? "，今天额外加 " + extraCount + " 个（不占明后天）" : "，循序渐进"}}</view>
       </view>
       <view class="task-num green">{{newCount}}</view>
     </view>

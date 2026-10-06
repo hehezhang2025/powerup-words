@@ -166,14 +166,17 @@ ok(p8.newWords.length === 0, "学完5个后今日新词=0");
 L.addExtra(s8, T0, 5);
 p8 = L.getTodayPlan(s8, WORDS, T0);
 ok(p8.newWords.length === 5, "加量后今日新词=5，实际:" + p8.newWords.length);
-// 学完加量的 5 个，再加 5 个
-L.markNewWordsLearned(s8, p8.newWords.map(w => w.en), T0);
+ok(p8.extraCount === 5, "其中5个标记为加量，实际:" + p8.extraCount);
+// 学完加量的 5 个（按 extraCount 打豁免标记），再加 5 个
+L.markNewWordsLearned(s8, p8.newWords.map(w => w.en), T0, p8.extraCount);
+ok(L.extraLearned(s8, WORDS) === 5, "5个加量词被标记豁免，实际:" + L.extraLearned(s8, WORDS));
 L.addExtra(s8, T0, 5);
 p8 = L.getTodayPlan(s8, WORDS, T0);
 ok(p8.newWords.length === 5, "加量可叠加，仍为5");
-// 次日 extras 失效，回到正常额度（已提前学10个，累计额度10 → 新词0）
+L.markNewWordsLearned(s8, p8.newWords.map(w => w.en), T0, p8.extraCount);
+// 次日 extras 失效：加量过的 10 个词不占额度 → 明天的计划不受影响（仍给正常的 5 个）
 p8 = L.getTodayPlan(s8, WORDS, T1);
-ok(p8.newWords.length === 0, "次日加量失效且提前学额度抵扣，新词=0");
+ok(p8.newWords.length === 5, "次日加量失效但仍给正常额度5个，实际:" + p8.newWords.length);
 
 /* ---------- 进度超前时加量必须生效（改过系统时间的场景） ---------- */
 section("超前进度下的加量");
@@ -187,10 +190,48 @@ L.addExtra(s10, T0, 5);
 p10 = L.getTodayPlan(s10, WORDS, T0);
 ok(p10.newWords.length === 5, "超前时加量仍给5个，实际:" + p10.newWords.length);
 // 学完这 5 个后再加 5，应只再给 5 个（不能一次给 10）
-L.markNewWordsLearned(s10, p10.newWords.map(w => w.en), T0);
+L.markNewWordsLearned(s10, p10.newWords.map(w => w.en), T0, p10.extraCount);
 L.addExtra(s10, T0, 5);
 p10 = L.getTodayPlan(s10, WORDS, T0);
 ok(p10.newWords.length === 5, "连点两次各给5个（非10），实际:" + p10.newWords.length);
+
+/* ---------- 加量不占用明后天额度 ---------- */
+section("加量不影响后续计划");
+// A：不加量，连学 3 天
+let sa = L.createInitialState(T0);
+const seqA = [];
+for (let d = 0; d < 3; d++) {
+  const day = L.addDays(T0, d);
+  const pa = L.getTodayPlan(sa, WORDS, day);
+  seqA.push(pa.newWords.length);
+  L.markNewWordsLearned(sa, pa.newWords.map(w => w.en), day, pa.extraCount);
+}
+ok(seqA.join(",") === "5,5,5", "不加量时每天都是5个，实际:" + seqA.join(","));
+
+// B：第1天加量 5（学10个），第2、3天的计划必须与 A 完全一致
+let sb = L.createInitialState(T0);
+const seqB = [];
+for (let d = 0; d < 3; d++) {
+  const day = L.addDays(T0, d);
+  if (d === 0) L.addExtra(sb, day, 5);
+  const pb = L.getTodayPlan(sb, WORDS, day);
+  seqB.push(pb.newWords.length);
+  L.markNewWordsLearned(sb, pb.newWords.map(w => w.en), day, pb.extraCount);
+}
+ok(seqB[0] === 10, "第1天加量后给10个，实际:" + seqB[0]);
+ok(seqB.slice(1).join(",") === seqA.slice(1).join(","),
+  "加量后第2、3天计划与不加量时一致，实际:" + seqB.slice(1).join(",") + " vs " + seqA.slice(1).join(","));
+ok(L.learnedCount(sb) === 20, "B 三天共学20个（15正常+5加量），实际:" + L.learnedCount(sb));
+ok(L.aheadBy(sb, L.addDays(T0, 2)) === 0, "加量不算进度超前，实际:" + L.aheadBy(sb, L.addDays(T0, 2)));
+
+// 撤销加量
+let sc = L.createInitialState(T0);
+L.addExtra(sc, T0, 5);
+ok((sc.extras[T0] || 0) === 5, "加量记录=5");
+L.clearExtra(sc, T0);
+ok((sc.extras[T0] || 0) === 0, "撤销后加量清零");
+const pc = L.getTodayPlan(sc, WORDS, T0);
+ok(pc.newWords.length === 5, "撤销后回到正常额度5个，实际:" + pc.newWords.length);
 
 /* ---------- 排期体检与拉回 ---------- */
 section("排期体检");

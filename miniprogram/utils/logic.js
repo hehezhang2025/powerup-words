@@ -110,11 +110,41 @@ function learnedInPool(state, allWords) {
   }
   return n;
 }
+// 被标记为「加量」的已学词数。加量词在 markNewWordsLearned 时打上 extra:1，永久豁免额度。
+// 否则：今天多背 5 个 → 已学词数 +5 → 明天的「累计额度 − 已学」少 5，等于从明后天借词。
+function eachExtra(state, allWords, fn) {
+  if (allWords) {
+    for (let i = 0; i < allWords.length; i++) {
+      const w = state.words[allWords[i].en];
+      if (w && w.extra) fn(w);
+    }
+  } else {
+    for (const en of Object.keys(state.words)) {
+      const w = state.words[en];
+      if (w && w.extra) fn(w);
+    }
+  }
+}
+function extraLearned(state, allWords) {
+  let n = 0;
+  eachExtra(state, allWords, () => n++);
+  return n;
+}
+// 当天登记的加量词数（连点两次加量时，不能把第一次已经背掉的再给一遍）
+function extraLearnedOn(state, today, allWords) {
+  let n = 0;
+  eachExtra(state, allWords, (w) => { if (w.learnedDate === today) n++; });
+  return n;
+}
 // 今日可学新词数：累计欠账补发，但单日不超过额度×2；extras 为当日手动加量
 function todayNewAllowance(state, today, remainingPool, allWords) {
-  const learned = learnedInPool(state, allWords);
+  const learnedRaw = learnedInPool(state, allWords);
+  // 已学词里扣掉加量部分：加量是"白送"的，不影响明后天的基础额度
+  const normal = Math.max(0, learnedRaw - extraLearned(state, allWords));
   const extra = (state.extras && state.extras[today]) || 0;
-  const allow = earnedQuota(state, today) + extra - learned;
+  // 加量额度单独结算：已背掉的加量要从今天的加量额度里扣，剩下的才是还能背的
+  const extraLeft = Math.max(0, extra - extraLearnedOn(state, today, allWords));
+  const allow = earnedQuota(state, today) - normal + extraLeft;
   const cap = dailyQuota(state) * 2 + extra;
   const pool = remainingPool == null ? Infinity : remainingPool;
   let n = Math.max(0, Math.min(allow, cap, pool));
@@ -123,7 +153,7 @@ function todayNewAllowance(state, today, remainingPool, allWords) {
   // 用 extraBase 记录首次加量时的已学词数，扣掉本次已用掉的量，避免连点两次一次给 10 个
   if (n === 0 && extra > 0) {
     const base = state.extraBase && state.extraBase[today];
-    const used = base == null ? 0 : Math.max(0, learned - base);
+    const used = base == null ? 0 : Math.max(0, learnedRaw - base);
     n = Math.min(Math.max(0, extra - used), pool);
   }
   return n;
@@ -165,10 +195,12 @@ function getTodayPlan(state, allWords, today) {
   const remaining = allWords.length - learnedInPool(state, allWords);
   const newCount = todayNewAllowance(state, today, remaining, allWords);
   const newWords = pickNewWords(state, allWords, newCount);
+  const extraLeft = Math.max(0, ((state.extras && state.extras[today]) || 0) - extraLearnedOn(state, today, allWords));
   return {
     reviews,            // [{en, stage, dueDate}] 全量到期复习
     newWords,           // [{en, zh, level, unit, order}] 今日新词
     newCount,
+    extraCount: Math.min(extraLeft, newWords.length), // 今日新词里属于「加量」的个数（尾部）
     dailyQuota: dailyQuota(state),
     remainingPool: remaining,
     doneToday: state.stats.lastDoneDate === today
@@ -196,8 +228,9 @@ function scheduleAheadCount(state, today) {
   return n;
 }
 // 已学词数超出累计额度的量（>0 说明进度超前，新词会被"欠账抵扣"逻辑卡住）
+// 加量词不计入：那是主动多背的，不算超前
 function aheadBy(state, today) {
-  return learnedCount(state) - earnedQuota(state, today);
+  return learnedCount(state) - extraLearned(state, null) - earnedQuota(state, today);
 }
 // 把超前排期拉回：保留 stage/掌握度，仅按当前 stage 从今天重新排下次复习日
 function normalizeSchedule(state, today) {
@@ -228,14 +261,25 @@ function applyAnswer(state, en, isCorrect, today) {
   }
   return state;
 }
-// 新词学习卡翻完后登记：stage 0，明天第一次复习
-function markNewWordsLearned(state, ens, today) {
-  ens.forEach((en) => {
+// 新词学习卡翻完后登记：stage 0，明天第一次复习。
+// extraN：本次里属于「加量」的词数（取尾部 N 个），打上 extra:1 让它们不占明后天的额度
+function markNewWordsLearned(state, ens, today, extraN) {
+  const n = Math.max(0, Number(extraN) || 0);
+  const from = ens.length - Math.min(n, ens.length);
+  ens.forEach((en, i) => {
     if (!state.words[en]) {
       state.words[en] = { stage: 0, learnedDate: today, dueDate: addDays(today, INTERVALS[0]), correct: 0, wrong: 0 };
+      if (i >= from) state.words[en].extra = 1;
       state.stats.totalLearned += 1;
     }
   });
+  return state;
+}
+// 撤销某天的加量（只撤销尚未学掉的部分；已学的词保留，只是不再额外给量）
+function clearExtra(state, today) {
+  if (!state.extras) return state;
+  delete state.extras[today];
+  if (state.extraBase) delete state.extraBase[today];
   return state;
 }
 
@@ -267,7 +311,7 @@ module.exports = {
   INTERVALS, MAX_STAGE,
   todayStr, addDays, daysBetween,
   createInitialState, createBankProgress, isValidState, toggleBank, migrateState,
-  dailyQuota, earnedQuota, learnedCount, learnedInPool, todayNewAllowance, addExtra,
+  dailyQuota, earnedQuota, learnedCount, learnedInPool, extraLearned, todayNewAllowance, addExtra, clearExtra,
   dueReviews, pickNewWords, getTodayPlan,
   applyAnswer, markNewWordsLearned, checkIn,
   masteryOf,

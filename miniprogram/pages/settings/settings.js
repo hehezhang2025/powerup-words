@@ -2,12 +2,19 @@ const logic = require("../../utils/logic.js");
 const backup = require("../../utils/backup.js");
 const bank = require("../../utils/bank.js");
 
-const WEEK_OPTIONS = [7, 14, 21, 35, 49, 70];
+// 每周新词档位：每天 1/2/3/5/10/15/20 个；不够用可在下面自定义 1~280
+const WEEK_OPTIONS = [7, 14, 21, 35, 70, 105, 140];
+const EXTRA_OPTIONS = [5, 10, 20];
 
 Page({
   data: {
     weeklyNew: 35,
     weekOptions: WEEK_OPTIONS,
+    extraOptions: EXTRA_OPTIONS,
+    weekInput: "",
+    dailyNew: 5,
+    restWords: 0,
+    weeksLeft: 0,
     todayExtra: 0,
     streak: 0,
     bestStreak: 0,
@@ -34,13 +41,19 @@ Page({
     for (const en of Object.keys(s.words)) {
       if (s.words[en].stage >= logic.MAX_STAGE) graduated++;
     }
+    const words = bank.words();
+    const rest = Math.max(0, words.length - logic.learnedInPool(s, words));
     this.setData({
       weeklyNew: s.settings.weeklyNew,
-      todayExtra: (s.extras && s.extras[logic.todayStr()]) || 0,
+      weekInput: String(s.settings.weeklyNew),
+      dailyNew: logic.dailyQuota(s),
+      restWords: rest,
+      weeksLeft: rest ? Math.max(1, Math.ceil(rest / Math.max(1, s.settings.weeklyNew))) : 0,
+      todayExtra: (s.extras && s.extras[today]) || 0,
       streak: s.stats.streak,
       bestStreak: s.stats.bestStreak,
       dayCount: s.stats.days.length,
-      learned: logic.learnedInPool(s, bank.words()), // 只算已勾选词库里的已学词
+      learned: logic.learnedInPool(s, words), // 只算已勾选词库里的已学词
       graduated,
       schedAhead: logic.scheduleAheadCount(s, today),
       aheadBy: Math.max(0, logic.aheadBy(s, today)),
@@ -110,23 +123,46 @@ Page({
     });
   },
 
-  // ---- 今日加点量：+5 新词 + 一轮消消乐（仅当天有效，明天自动恢复） ----
-  addExtra() {
+  // ---- 今日加点量：临时多背 N 个新词（仅当天有效，明天自动恢复正常节奏） ----
+  // 加量背掉的词会打上标记，不占明后天的额度——今天多背不影响后面几天的计划
+  addExtra(e) {
     const app = getApp();
     const s = app.globalData.state;
-    logic.addExtra(s, logic.todayStr(), 5);
+    const n = Number((e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.n) || 5);
+    logic.addExtra(s, logic.todayStr(), n);
     app.saveState();
     this.onShow();
-    wx.showToast({ title: "已加5词，回「今日」继续", icon: "none", duration: 2000 });
+    wx.showToast({ title: "今天多给 " + n + " 词，回「今日」继续", icon: "none", duration: 2000 });
+  },
+
+  undoExtra() {
+    const app = getApp();
+    logic.clearExtra(app.globalData.state, logic.todayStr());
+    app.saveState();
+    this.onShow();
+    wx.showToast({ title: "已撤销今天的加量", icon: "none", duration: 2000 });
   },
 
   setWeekly(e) {
-    const v = Number(e.currentTarget.dataset.v);
+    this.applyWeekly(Number(e.currentTarget.dataset.v));
+  },
+  onWeekInput(e) {
+    this.setData({ weekInput: e.detail.value || "" });
+  },
+  applyCustomWeekly() {
+    const v = Math.floor(Number(this.data.weekInput));
+    if (!v || v < 1 || v > 280) {
+      wx.showToast({ title: "请填 1~280 之间的整数", icon: "none", duration: 2000 });
+      return;
+    }
+    this.applyWeekly(v);
+  },
+  applyWeekly(v) {
     const s = getApp().globalData.state;
     s.settings.weeklyNew = v;
     getApp().saveState();
-    this.setData({ weeklyNew: v });
-    wx.showToast({ title: "已保存", icon: "success" });
+    this.onShow();
+    wx.showToast({ title: "每天 " + logic.dailyQuota(s) + " 个新词", icon: "success", duration: 2000 });
   },
 
   noop() {},

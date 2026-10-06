@@ -17,6 +17,7 @@ Page({
     const today = logic.todayStr();
     const plan = logic.getTodayPlan(s, bank.words(), today);
     this.newWords = plan.newWords;
+    this.extraCount = plan.extraCount || 0; // 尾部这些是「加量」词，登记时打标记不占额度
     if (!this.newWords.length) {
       this.backSafe();
       return;
@@ -71,7 +72,7 @@ Page({
     // 登记今日新词（stage 0，明天开始复习）
     const s = getApp().globalData.state;
     const today = logic.todayStr();
-    logic.markNewWordsLearned(s, this.newWords.map(w => w.en), today);
+    logic.markNewWordsLearned(s, this.newWords.map(w => w.en), today, this.extraCount);
     const sess = getApp().globalData.session;
     if (sess) {
       sess.practicedEns = this.newWords.map(w => w.en);
