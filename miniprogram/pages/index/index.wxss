@@ -39,6 +39,7 @@
 }
 .task-num.orange { color: #FF7A59; background: #FFE8DC; }
 .task-num.green { color: #3FA34D; background: #DFF3E1; }
+.task-num.red { color: #E5484D; background: #FFE9EA; }
 
 .start-btn { margin-top: 36rpx; }
 

@@ -10,6 +10,9 @@ Page({
     reviewCount: 0,
     newCount: 0,
     extraCount: 0,   // 今日新词里属于「加量」的个数
+    hardCount: 0,    // 错词本：今天要过的顽固词
+    spotCount: 0,    // 毕业前抽查：提前考的长间隔词
+    reviewTodo: 0,   // 复习环节总数（到期 + 抽查）
     dailyQuota: 5,
     doneToday: false,
     nothingToday: false, // 没复习也没新词（全部学完且未到期）
@@ -34,18 +37,22 @@ Page({
     const WORDS = bank.words();
     const plan = logic.getTodayPlan(s, WORDS, today);
     this.plan = plan;
+    const reviewQueue = plan.reviewQueue || plan.reviews.map(r => r.en);
     // 预下载今日全部词的发音到本地，播放秒出不卡网络
-    tts.preload(plan.reviews.map(r => r.en).concat(plan.newWords.map(w => w.en)));
+    tts.preload(reviewQueue.concat(plan.hardWords).concat(plan.newWords.map(w => w.en)));
     this.setData({
       streak: s.stats.streak,
       learned: logic.learnedInPool(s, WORDS),
       reviewCount: plan.reviews.length,
+      reviewTodo: reviewQueue.length,
+      hardCount: (plan.hardWords || []).length,
+      spotCount: (plan.spotChecks || []).length,
       newCount: plan.newWords.length,
       extraCount: plan.extraCount || 0,
       dailyQuota: plan.dailyQuota,
       // 打卡完成且无任何剩余任务才显示"已完成"（加量后新词出现时可继续学习）
-      doneToday: plan.doneToday && plan.reviews.length === 0 && plan.newWords.length === 0,
-      nothingToday: !plan.doneToday && plan.reviews.length === 0 && plan.newWords.length === 0,
+      doneToday: plan.doneToday && reviewQueue.length === 0 && plan.hardWords.length === 0 && plan.newWords.length === 0,
+      nothingToday: !plan.doneToday && reviewQueue.length === 0 && plan.hardWords.length === 0 && plan.newWords.length === 0,
       nextDueText: this.describeNextDue(s),
       total: bank.total()
     });
@@ -63,6 +70,11 @@ Page({
     return pretty + "（" + gap + "天后）";
   },
 
+  // 看错词本（不进学习流程，纯查看）
+  openHard() {
+    wx.navigateTo({ url: "/pages/hard/hard" });
+  },
+
   // 点击"开始学习"：初始化今日流程会话
   startFlow() {
     const app = getApp();
@@ -70,6 +82,7 @@ Page({
       date: logic.todayStr(),
       inFlow: true,
       reviewDone: false,
+      hardDone: false,
       learnDone: false,
       practiceDone: false,
       practicedEns: []
@@ -77,7 +90,7 @@ Page({
     this.nextStep();
   },
 
-  // 流程编排：复习 → 新词卡片 → 新词巩固 → 打卡
+  // 流程编排：复习 → 错词本 → 新词卡片 → 新词巩固 → 打卡
   // 各步骤的 done 标志由对应页面"真正完成"时置位，中途退出会回到该步骤继续
   nextStep() {
     const app = getApp();
@@ -85,9 +98,14 @@ Page({
     const s = app.globalData.state;
     const today = logic.todayStr();
     const plan = logic.getTodayPlan(s, bank.words(), today);
+    const reviewQueue = plan.reviewQueue || plan.reviews.map(r => r.en);
 
-    if (!sess.reviewDone && plan.reviews.length > 0) {
+    if (!sess.reviewDone && reviewQueue.length > 0) {
       wx.navigateTo({ url: "/pages/game/game?mode=review" });
+      return;
+    }
+    if (!sess.hardDone && (plan.hardWords || []).length > 0) {
+      wx.navigateTo({ url: "/pages/game/game?mode=hard" });
       return;
     }
     if (!sess.learnDone && plan.newWords.length > 0) {

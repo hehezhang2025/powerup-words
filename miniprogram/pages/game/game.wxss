@@ -11,6 +11,28 @@
 }
 .mode-tag.review { color: #4D96FF; background: #E7F0FF; }
 .mode-tag.practice { color: #B07CF6; background: #F1E8FF; }
+.mode-tag.hard { color: #E5484D; background: #FFE9EA; }
+
+/* 答错后的正解卡 */
+.answer-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(60, 40, 20, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.answer-card {
+  width: 70vw;
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 48rpx 40rpx;
+  text-align: center;
+}
+.ac-title { font-size: 26rpx; color: #9C8E7E; margin-bottom: 16rpx; }
+.ac-en { font-size: 56rpx; font-weight: 800; color: #2F6FED; }
+.ac-zh { font-size: 40rpx; font-weight: 700; color: #E2673A; margin: 12rpx 0 20rpx; }
 
 .board { display: flex; gap: 24rpx; }
 .col { flex: 1; display: flex; flex-direction: column; gap: 24rpx; }

@@ -112,6 +112,37 @@ const pool3 = bank.wordsOf(["pu1"]);
 const after = L.todayNewAllowance(s2, T0, pool3.length - L.learnedInPool(s2, pool3), pool3);
 ok(after >= before, "取消后新词额度不减少 before=" + before + " after=" + after);
 
+/* ---------- 单元内顺序 ---------- */
+section("单元内顺序");
+function unitSeq(arr) {
+  const u = [];
+  arr.forEach((w) => { if (!u.length || u[u.length - 1] !== w.unit) u.push(w.unit); });
+  return u.join(",");
+}
+const ord = bank.wordsOf(["pu1"], { shuffleInUnit: false, seed: "s1" });
+const shf = bank.wordsOf(["pu1"], { shuffleInUnit: true, seed: "s1" });
+ok(ord.length === shf.length && ord.length === 434, "打乱前后词数一致，实际:" + ord.length + "/" + shf.length);
+ok(unitSeq(ord) === unitSeq(shf), "打乱后单元之间的顺序不变");
+ok(ord.map(w => w.en).sort().join("|") === shf.map(w => w.en).sort().join("|"), "打乱前后是同一批词");
+let samePos = 0;
+for (let i = 0; i < ord.length; i++) if (ord[i].en === shf[i].en) samePos++;
+ok(samePos < ord.length, "打乱后整体顺序有变化，同位置数:" + samePos + "/" + ord.length);
+ok(bank.wordsOf(["pu1"], { shuffleInUnit: true, seed: "s1" }).map(w => w.en).join("|") === shf.map(w => w.en).join("|"), "同种子结果稳定（一天内不跳动）");
+ok(bank.wordsOf(["pu1"], { shuffleInUnit: true, seed: "s2" }).map(w => w.en).join("|") !== shf.map(w => w.en).join("|"), "换种子顺序变化（隔天会换一批）");
+let seqOk = true;
+ord.forEach((w, i) => { if (w.order !== i) seqOk = false; });
+ok(seqOk, "不打乱时 order 连续递增");
+// 多选时按「词库+单元」分组，库与库之间不混
+const mix = bank.wordsOf(["pu1", "pep3"], { shuffleInUnit: false, seed: "s1" });
+let lastBank = "", flips = 0;
+mix.forEach((w) => { if (w.bank !== lastBank) { flips++; lastBank = w.bank; } });
+ok(flips === 2, "多库合并时先pu1后pep3，切换次数:" + flips);
+// configure 注入后默认生效
+bank.configure({ shuffleInUnit: false, seed: "s1" });
+ok(bank.words(["pu1"]).map(w => w.en).join("|") === ord.map(w => w.en).join("|"), "configure 后默认按序");
+bank.configure({ shuffleInUnit: true, seed: "s1" });
+ok(bank.words(["pu1"]).map(w => w.en).join("|") === shf.map(w => w.en).join("|"), "configure 后默认打乱");
+
 /* ---------- 旧备份迁移 ---------- */
 section("旧备份迁移");
 const old = {

@@ -12,6 +12,7 @@ Page({
     weekOptions: WEEK_OPTIONS,
     extraOptions: EXTRA_OPTIONS,
     weekInput: "",
+    shuffleInUnit: true,
     dailyNew: 5,
     restWords: 0,
     weeksLeft: 0,
@@ -46,6 +47,7 @@ Page({
     this.setData({
       weeklyNew: s.settings.weeklyNew,
       weekInput: String(s.settings.weeklyNew),
+      shuffleInUnit: !!s.settings.shuffleInUnit,
       dailyNew: logic.dailyQuota(s),
       restWords: rest,
       weeksLeft: rest ? Math.max(1, Math.ceil(rest / Math.max(1, s.settings.weeklyNew))) : 0,
@@ -141,6 +143,21 @@ Page({
     app.saveState();
     this.onShow();
     wx.showToast({ title: "已撤销今天的加量", icon: "none", duration: 2000 });
+  },
+
+  // 单元内打乱：开启→每个单元里的词随机出现（单元之间仍按教材顺序）；关闭→严格按课本顺序
+  toggleShuffle() {
+    const app = getApp();
+    const s = app.globalData.state;
+    s.settings.shuffleInUnit = !s.settings.shuffleInUnit;
+    app.applySettings();
+    app.saveState();
+    this.onShow();
+    wx.showToast({
+      title: s.settings.shuffleInUnit ? "单元内随机出词" : "单元内按课本顺序",
+      icon: "none",
+      duration: 2000
+    });
   },
 
   setWeekly(e) {

@@ -248,6 +248,72 @@ ok(s11.words["hello"].stage === 0, "拉回后 stage 不变");
 ok(s11.words["hello"].dueDate === L.addDays(T0, 1), "拉回后从明天复习，实际:" + s11.words["hello"].dueDate);
 ok(L.scheduleAheadCount(s11, T0) === 0, "拉回后无超前");
 
+/* ---------- 答错回退（lapse，不归零） ---------- */
+section("答错回退不归零");
+let sl = L.createInitialState(T0);
+L.markNewWordsLearned(sl, [WORDS[0].en], T0);
+let dl = T0;
+for (let i = 0; i < 5; i++) { dl = L.addDays(dl, 1); L.applyAnswer(sl, WORDS[0].en, true, dl); }
+ok(sl.words[WORDS[0].en].stage === 5, "连答对5次到stage5，实际:" + sl.words[WORDS[0].en].stage);
+const dueBefore = sl.words[WORDS[0].en].dueDate;
+L.applyAnswer(sl, WORDS[0].en, false, L.addDays(T0, 30));
+const wl = sl.words[WORDS[0].en];
+ok(wl.stage === 3, "stage5答错回退到3而非归零，实际:" + wl.stage);
+ok(wl.lapses === 1, "lapses=1，实际:" + wl.lapses);
+ok(wl.dueDate === L.addDays(T0, 31), "lapse后明天强化一次，实际:" + wl.dueDate);
+ok(wl.dueDate < dueBefore, "排期被拉近（间隔打折）");
+L.applyAnswer(sl, WORDS[0].en, false, L.addDays(T0, 40));
+ok(sl.words[WORDS[0].en].stage === 1, "再错一次回到stage1，实际:" + sl.words[WORDS[0].en].stage);
+
+/* ---------- 错词本 ---------- */
+section("错词本");
+let sh = L.createInitialState(T0);
+L.markNewWordsLearned(sh, [WORDS[0].en, WORDS[1].en], T0);
+L.applyAnswer(sh, WORDS[0].en, false, T0);
+ok(L.hardWords(sh, WORDS).length === 0, "错1次还不进错词本");
+L.applyAnswer(sh, WORDS[0].en, true, L.addDays(T0, 1));
+L.applyAnswer(sh, WORDS[0].en, false, L.addDays(T0, 2));
+ok(L.hardWords(sh, WORDS).length === 1, "错2次进错词本，实际:" + L.hardWords(sh, WORDS).length);
+ok(L.hardWords(sh, WORDS)[0].lapses === 2, "lapses=2，实际:" + L.hardWords(sh, WORDS)[0].lapses);
+ok(L.todayHardQueue(sh, L.addDays(T0, 2), WORDS).length === 0, "今天答过的不重复排队");
+ok(L.todayHardQueue(sh, L.addDays(T0, 5), WORDS).length === 1, "隔天进今日错词队列");
+L.applyHardAnswer(sh, WORDS[0].en, true, L.addDays(T0, 5));
+L.applyHardAnswer(sh, WORDS[0].en, true, L.addDays(T0, 6));
+ok(L.hardWords(sh, WORDS).length === 1, "答对2次仍在错词本");
+L.applyHardAnswer(sh, WORDS[0].en, true, L.addDays(T0, 7));
+ok(L.hardWords(sh, WORDS).length === 0, "连续答对3次放出，实际:" + L.hardWords(sh, WORDS).length);
+ok(sh.words[WORDS[0].en].lapses === 0, "放出后 lapses 清零");
+// 出册途中答错要重来
+let sh2 = L.createInitialState(T0);
+L.markNewWordsLearned(sh2, [WORDS[2].en], T0);
+L.applyAnswer(sh2, WORDS[2].en, false, T0);
+L.applyAnswer(sh2, WORDS[2].en, false, L.addDays(T0, 1));
+L.applyHardAnswer(sh2, WORDS[2].en, true, L.addDays(T0, 2));
+ok(sh2.words[WORDS[2].en].hardClear === 1, "出册进度=1，实际:" + sh2.words[WORDS[2].en].hardClear);
+L.applyHardAnswer(sh2, WORDS[2].en, false, L.addDays(T0, 3));
+ok(sh2.words[WORDS[2].en].hardClear === 0, "答错后出册进度清零");
+ok(sh2.words[WORDS[2].en].lapses === 3, "答错累计 lapses=3，实际:" + sh2.words[WORDS[2].en].lapses);
+
+/* ---------- 毕业前抽查 ---------- */
+section("毕业前抽查");
+let sp = L.createInitialState(T0);
+L.markNewWordsLearned(sp, [WORDS[0].en, WORDS[1].en], T0);
+let dp = T0;
+for (let i = 0; i < 4; i++) { dp = L.addDays(dp, 1); L.applyAnswer(sp, WORDS[0].en, true, dp); }
+ok(sp.words[WORDS[0].en].stage === 4, "推到stage4，实际:" + sp.words[WORDS[0].en].stage);
+const scDay = L.addDays(dp, 3);
+const spot = L.spotChecks(sp, scDay, WORDS);
+ok(spot.indexOf(WORDS[0].en) >= 0, "长间隔词被抽到，实际:" + spot.join(","));
+ok(spot.indexOf(WORDS[1].en) < 0, "stage0 的词不抽查");
+ok(L.spotChecks(sp, scDay, WORDS).join(",") === spot.join(","), "同一天抽到的词固定");
+const stBefore = sp.words[WORDS[0].en].stage;
+L.applyAnswer(sp, WORDS[0].en, true, scDay, { probe: true });
+ok(sp.words[WORDS[0].en].stage === stBefore, "抽查答对不推进stage，实际:" + sp.words[WORDS[0].en].stage);
+L.applyAnswer(sp, WORDS[0].en, false, scDay, { probe: true });
+ok(sp.words[WORDS[0].en].stage === 2, "抽查答错照常回退，实际:" + sp.words[WORDS[0].en].stage);
+const dueSp = sp.words[WORDS[0].en].dueDate;
+ok(L.spotChecks(sp, dueSp, WORDS).indexOf(WORDS[0].en) < 0, "今天要到期的词不算抽查");
+
 /* ---------- 打卡幂等（加量后再打卡 streak 不变） ---------- */
 section("打卡幂等");
 let s9 = L.createInitialState(T0);

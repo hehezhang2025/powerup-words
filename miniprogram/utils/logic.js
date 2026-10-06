@@ -5,9 +5,22 @@
  * 新词：每日额度 = round(每周目标/7)，漏学顺延（累计额度制），单日上限 = 额度×2
  */
 
+const { seededRandom } = require("./rand.js");
+
 const INTERVALS = [1, 2, 4, 7, 15, 30]; // stage 0..5 对应的下次间隔；stage 6 = 毕业
 const MAX_STAGE = 6;
 const DAY_MS = 86400000;
+
+// 答错处理：不归零，只回退（SM-2 的 lapse 思路——已经答对过几次的词，
+// 一次手滑不该让它从头再走六轮；回退后间隔自然变短，等价于"打折"）
+const LAPSE_DROP = 2;
+// 错词本：累计答错几次收录，连续答对几次放出，每天最多练几个
+const HARD_MIN_LAPSES = 2;
+const HARD_CLEAR = 3;
+const HARD_DAILY = 6;
+// 毕业前抽查：间隔已经拉到 15/30 天的词，提前随机考一次（防"顺序记忆"）
+const SPOT_STAGE = 4;
+const SPOT_DAILY = 2;
 
 /* ---------- 日期工具（全部用 YYYY-MM-DD 字符串，规避时区） ---------- */
 function todayStr(d) {
@@ -42,7 +55,7 @@ function createInitialState(today, bankIds) {
   return Object.assign({
     version: 4,
     bankIds: (bankIds && bankIds.length ? bankIds : ["pu1"]).slice(), // 可多选，按顺序合并
-    settings: { weeklyNew: 35 } // 每周目标全局共享
+    settings: { weeklyNew: 35, shuffleInUnit: true } // 每周目标/单元内打乱，全局共享
   }, p);
 }
 function isValidState(s) {
@@ -83,6 +96,7 @@ function migrateState(s) {
   }
   if (!Array.isArray(s.bankIds) || !s.bankIds.length) s.bankIds = ["pu1"];
   if (!s.extraBase) s.extraBase = {};
+  if (s.settings.shuffleInUnit === undefined) s.settings.shuffleInUnit = true; // 老存档默认打乱
   return s;
 }
 
@@ -201,6 +215,10 @@ function getTodayPlan(state, allWords, today) {
     newWords,           // [{en, zh, level, unit, order}] 今日新词
     newCount,
     extraCount: Math.min(extraLeft, newWords.length), // 今日新词里属于「加量」的个数（尾部）
+    hardWords: todayHardQueue(state, today, allWords),        // 错词本：今天要过的顽固词（已排除今天答过的）
+    spotChecks: spotChecks(state, today, allWords, SPOT_DAILY), // 毕业前抽查：提前考几个长间隔词
+    // 复习环节的完整队列（到期复习 + 抽查），首页和消消乐页共用，避免两边判空不一致
+    reviewQueue: reviews.map((r) => r.en).concat(spotChecks(state, today, allWords, SPOT_DAILY)),
     dailyQuota: dailyQuota(state),
     remainingPool: remaining,
     doneToday: state.stats.lastDoneDate === today
@@ -247,19 +265,91 @@ function normalizeSchedule(state, today) {
 }
 
 /* ---------- 答题结算 ---------- */
-function applyAnswer(state, en, isCorrect, today) {
+// opts.probe：探查性答题（毕业前抽查、当天巩固）——答对不推进 stage，
+// 因为提前考出来不代表真能撑到那个间隔；答错照常回退
+function applyAnswer(state, en, isCorrect, today, opts) {
   const w = state.words[en];
   if (!w) return state;
+  w.lastOn = today; // 今天答过题：错词本当天不再重复排队
   if (isCorrect) {
     w.correct += 1;
+    if (opts && opts.probe) return state;
     w.stage = Math.min(MAX_STAGE, w.stage + 1);
     w.dueDate = w.stage >= MAX_STAGE ? null : addDays(today, INTERVALS[w.stage]);
   } else {
     w.wrong += 1;
-    w.stage = 0;
-    w.dueDate = addDays(today, INTERVALS[0]); // 明天再来
+    w.lapses = (w.lapses || 0) + 1;
+    w.hardClear = 0;
+    // lapse：回退而不是归零（stage 5 → 3，下次间隔 30 天变 7 天），明天先强化一次
+    w.stage = Math.max(0, w.stage - LAPSE_DROP);
+    w.dueDate = addDays(today, INTERVALS[0]);
   }
   return state;
+}
+
+/* ---------- 错词本 ---------- */
+// 顽固词：累计答错 ≥2 次且还没毕业。按错得多的、出册进度少的排前面
+function hardWords(state, allWords, limit) {
+  const inPool = allWords ? allWords.map((w) => w.en) : null;
+  const out = [];
+  for (const en of Object.keys(state.words)) {
+    const w = state.words[en];
+    if (!w || w.stage >= MAX_STAGE) continue;
+    if ((w.lapses || 0) < HARD_MIN_LAPSES) continue;
+    if (inPool && inPool.indexOf(en) < 0) continue;
+    out.push({ en, lapses: w.lapses, stage: w.stage, hardClear: w.hardClear || 0 });
+  }
+  out.sort((a, b) => (b.lapses - a.lapses) || (a.hardClear - b.hardClear));
+  return typeof limit === "number" && limit > 0 ? out.slice(0, limit) : out;
+}
+// 今天真正要过的错词：排除今天已经答过题的（复习环节刚练过就别再来一遍）
+// 首页和消消乐页必须用同一个函数判空，否则会出现"进了空队列又被弹回来"的死循环
+function todayHardQueue(state, today, allWords) {
+  return hardWords(state, allWords, HARD_DAILY)
+    .filter((h) => {
+      const w = state.words[h.en];
+      return !(w && w.lastOn === today);
+    })
+    .map((h) => h.en);
+}
+// 错词本里答题：连续答对 HARD_CLEAR 次就放出（清零 lapses），答错则出册进度归零
+function applyHardAnswer(state, en, isCorrect, today) {
+  const w = state.words[en];
+  if (!w) return state;
+  applyAnswer(state, en, isCorrect, today);
+  if (isCorrect) {
+    w.hardClear = (w.hardClear || 0) + 1;
+    if (w.hardClear >= HARD_CLEAR) {
+      w.lapses = 0;
+      w.hardClear = 0;
+    }
+  } else {
+    w.hardClear = 0;
+  }
+  return state;
+}
+
+/* ---------- 毕业前抽查 ---------- */
+// 从间隔已拉到 15/30 天、今天又不到期的词里随机抽几个提前考：
+// 答对不推进（只记一笔），答错才回退——专门揪"看着会、其实没会"的词
+function spotChecks(state, today, allWords, limit) {
+  const n = typeof limit === "number" && limit > 0 ? limit : SPOT_DAILY;
+  const inPool = allWords ? allWords.map((w) => w.en) : null;
+  const pool = [];
+  for (const en of Object.keys(state.words)) {
+    const w = state.words[en];
+    if (!w || w.stage < SPOT_STAGE || w.stage >= MAX_STAGE) continue;
+    if (!w.dueDate || w.dueDate <= today) continue; // 今天本来就要复习的不算抽查
+    if (inPool && inPool.indexOf(en) < 0) continue;
+    pool.push(en);
+  }
+  const rnd = seededRandom(today + "|spot"); // 同一天抽到同一批，退出重进不换词
+  const picked = [];
+  const arr = pool.slice();
+  while (arr.length && picked.length < n) {
+    picked.push(arr.splice(Math.floor(rnd() * arr.length), 1)[0]);
+  }
+  return picked;
 }
 // 新词学习卡翻完后登记：stage 0，明天第一次复习。
 // extraN：本次里属于「加量」的词数（取尾部 N 个），打上 extra:1 让它们不占明后天的额度
@@ -313,7 +403,8 @@ module.exports = {
   createInitialState, createBankProgress, isValidState, toggleBank, migrateState,
   dailyQuota, earnedQuota, learnedCount, learnedInPool, extraLearned, todayNewAllowance, addExtra, clearExtra,
   dueReviews, pickNewWords, getTodayPlan,
-  applyAnswer, markNewWordsLearned, checkIn,
+  applyAnswer, applyHardAnswer, markNewWordsLearned, checkIn,
   masteryOf,
-  nextDueDate, scheduleAheadCount, aheadBy, normalizeSchedule
+  nextDueDate, scheduleAheadCount, aheadBy, normalizeSchedule,
+  hardWords, todayHardQueue, spotChecks, LAPSE_DROP, HARD_MIN_LAPSES, HARD_CLEAR, HARD_DAILY, SPOT_STAGE, SPOT_DAILY
 };

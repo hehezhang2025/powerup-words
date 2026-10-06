@@ -1,0 +1,26 @@
+<view class="page">
+  <view class="card">
+    <view class="section-title">💪 错词本</view>
+    <view class="muted line">累计答错 {{minLapses}} 次以上的词会自动收进来，每天在「今日」里优先过一遍。</view>
+    <view class="muted line">连续答对 {{clearNeed}} 次就自动放出，回到正常复习节奏。</view>
+    <view class="muted">当前 <text class="hl">{{total}}</text> 个顽固词</view>
+  </view>
+
+  <view wx:if="{{total === 0}}" class="card center muted" style="padding:80rpx 32rpx">
+    暂时没有顽固词，保持住！🌟
+  </view>
+
+  <view class="card list-card" wx:else>
+    <view class="word-row" wx:for="{{list}}" wx:key="en" data-en="{{item.en}}" bindtap="speak">
+      <view class="word-main">
+        <text class="we">{{item.en}}</text>
+        <text class="wz">{{item.zh}}</text>
+      </view>
+      <view class="word-side">
+        <view class="badge-hard">答错 {{item.wrong}} 次</view>
+        <view class="muted small">再答对 {{item.need}} 次放出 · 掌握 {{item.mastery}}%</view>
+      </view>
+    </view>
+    <view class="muted center" style="padding:30rpx 0 10rpx">👆 点单词可以听发音</view>
+  </view>
+</view>

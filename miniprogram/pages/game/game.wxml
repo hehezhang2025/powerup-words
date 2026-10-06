@@ -1,7 +1,7 @@
 <view class="page">
   <!-- 顶部进度 -->
   <view class="top-bar">
-    <view class="mode-tag {{mode}}">{{mode === 'review' ? '🔁 复习模式' : '🎮 巩固模式'}}</view>
+    <view class="mode-tag {{mode}}">{{modeText}}</view>
     <view class="muted">第 {{roundNo}} 组 · 已完成 {{doneCount}} / {{totalCount}} 词</view>
   </view>
 
@@ -37,4 +37,14 @@
     <view wx:if="{{toast}}" class="toast center pop">{{toast}}</view>
     <view class="muted center tip">👆 点一个英文，再点对应的中文</view>
   </block>
+
+  <!-- 答错后立刻给正解：发音自动读一遍，看完再选一次 -->
+  <view wx:if="{{answerCard}}" class="answer-mask">
+    <view class="answer-card pop">
+      <view class="ac-title">正确答案是</view>
+      <view class="ac-en">{{answerCard.en}}</view>
+      <view class="ac-zh">{{answerCard.zh}}</view>
+      <view class="muted">记住它，马上再选一次 💪</view>
+    </view>
+  </view>
 </view>

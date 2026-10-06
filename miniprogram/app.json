@@ -4,6 +4,7 @@
     "pages/learn/learn",
     "pages/game/game",
     "pages/words/words",
+    "pages/hard/hard",
     "pages/settings/settings"
   ],
   "window": {

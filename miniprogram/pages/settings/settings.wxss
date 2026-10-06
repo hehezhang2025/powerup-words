@@ -17,6 +17,30 @@
   box-shadow: 0 6rpx 16rpx rgba(232, 106, 43, 0.3);
 }
 
+/* 开关（单元内打乱） */
+.switch-row { display: flex; align-items: center; gap: 24rpx; }
+.switch-label { flex: 1; }
+.switch-main { font-size: 30rpx; font-weight: 700; color: #4A4036; margin-bottom: 6rpx; }
+.switch {
+  flex: none;
+  width: 96rpx;
+  height: 52rpx;
+  border-radius: 999rpx;
+  background: #E3DACB;
+  padding: 6rpx;
+  box-sizing: border-box;
+  transition: background 0.2s;
+}
+.switch.on { background: #FF9A3D; }
+.switch-dot {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+}
+.switch.on .switch-dot { transform: translateX(44rpx); }
+
 /* 自定义每周目标 / 撤销加量行 */
 .week-custom { display: flex; align-items: center; gap: 20rpx; margin-top: 20rpx; }
 .week-input {

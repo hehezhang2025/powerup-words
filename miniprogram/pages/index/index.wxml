@@ -40,9 +40,17 @@
       <text class="task-emoji">🔁</text>
       <view class="task-info">
         <view class="task-name">复习旧单词</view>
-        <view class="muted">遗忘曲线到期，先复习</view>
+        <view class="muted">遗忘曲线到期，先复习{{spotCount > 0 ? "（含 " + spotCount + " 个毕业前抽查）" : ""}}</view>
       </view>
-      <view class="task-num orange">{{reviewCount}}</view>
+      <view class="task-num orange">{{reviewTodo}}</view>
+    </view>
+    <view class="task-row" wx:if="{{hardCount > 0}}" bindtap="openHard">
+      <text class="task-emoji">💪</text>
+      <view class="task-info">
+        <view class="task-name">错词本</view>
+        <view class="muted">老出错的词，每天优先过一遍</view>
+      </view>
+      <view class="task-num red">{{hardCount}}</view>
     </view>
     <view class="task-row" wx:if="{{newCount > 0}}">
       <text class="task-emoji">✨</text>

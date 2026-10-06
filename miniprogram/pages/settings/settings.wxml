@@ -22,6 +22,19 @@
     <view class="muted" style="margin-top:16rpx">取消勾选不会删进度：那套词的掌握情况仍保留着，重新勾上就接着背。至少要留一套。</view>
   </view>
 
+  <!-- 单元内顺序 -->
+  <view class="card">
+    <view class="section-title">🔀 单元内顺序</view>
+    <view class="switch-row" bindtap="toggleShuffle">
+      <view class="switch-label">
+        <view class="switch-main">单元内打乱</view>
+        <view class="muted">开启：每个单元里的单词随机出现，单元之间仍按教材顺序；关闭：严格按课本顺序一个一个来。</view>
+      </view>
+      <view class="switch {{shuffleInUnit ? 'on' : ''}}"><view class="switch-dot"></view></view>
+    </view>
+    <view class="muted" style="margin-top:16rpx">建议保持开启：固定顺序容易记成「上一个词是什么」，换顺序还能认出来才算真记住。</view>
+  </view>
+
   <!-- 每周新词量 -->
   <view class="card">
     <view class="section-title">🎯 每周新单词目标</view>

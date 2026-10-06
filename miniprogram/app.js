@@ -20,6 +20,13 @@ App({
     local.bankIds = local.bankIds.filter((id) => bank.BANK_MAP[id] && bank.BANK_MAP[id].available);
     if (!local.bankIds.length) local.bankIds = [bank.DEFAULT_BANK];
     this.globalData.state = local;
+    this.applySettings();
+  },
+
+  // 把设置同步给依赖它的模块（如词表排布：单元内是否打乱）
+  applySettings() {
+    const s = this.globalData.state;
+    bank.configure({ shuffleInUnit: !!(s && s.settings && s.settings.shuffleInUnit) });
   },
 
   // 统一保存入口：内存 + 本地缓存
@@ -30,6 +37,7 @@ App({
   // 用外部状态整体替换（导入备份用；调用方需先校验）
   replaceState(state) {
     this.globalData.state = logic.migrateState(state);
+    this.applySettings();
     this.saveState();
   },
 
