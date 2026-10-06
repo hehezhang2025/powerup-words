@@ -1,9 +1,6 @@
 const logic = require("../../utils/logic.js");
 const tts = require("../../utils/tts.js");
-const { WORDS } = require("../../data/words.js");
-
-const ZH_MAP = {};
-WORDS.forEach(w => { ZH_MAP[w.en] = w.zh; });
+const bank = require("../../utils/bank.js");
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -34,6 +31,9 @@ Page({
     const app = getApp();
     const s = app.globalData.state;
     const today = logic.todayStr();
+    const WORDS = bank.words();
+    this.ZH_MAP = bank.zhMap();
+    this.WORDS = WORDS;
 
     // 构建今日待办词队列
     if (mode === "review") {
@@ -66,12 +66,12 @@ Page({
     if (this.mode === "review") {
       // 4 对纯配对（不足则有几个算几个）
       enList = targets.map(en => ({ key: en, text: en }));
-      zhList = targets.map(en => ({ key: en, text: ZH_MAP[en] }));
+      zhList = targets.map(en => ({ key: en, text: this.ZH_MAP[en] }));
     } else {
       // 经典 3+3：目标对 + 英文干扰 + 中文干扰（互不配对）
       const distract = this.pickDistractors(targets, 2);
       enList = targets.map(en => ({ key: en, text: en }));
-      zhList = targets.map(en => ({ key: en, text: ZH_MAP[en] }));
+      zhList = targets.map(en => ({ key: en, text: this.ZH_MAP[en] }));
       if (distract[0]) enList.push({ key: "dx-" + distract[0].en, text: distract[0].en, distract: true });
       if (distract[1]) zhList.push({ key: "dz-" + distract[1].en, text: distract[1].zh, distract: true });
     }
@@ -86,7 +86,7 @@ Page({
 
   // 从词库选干扰项（不在队列、不在本轮、英文与中文干扰来自不同词）
   pickDistractors(targets, n) {
-    const pool = WORDS.filter(w => !this.queue.includes(w.en) && !targets.includes(w.en));
+    const pool = this.WORDS.filter(w => !this.queue.includes(w.en) && !targets.includes(w.en));
     const shuffled = shuffle(pool);
     return shuffled.slice(0, n);
   },

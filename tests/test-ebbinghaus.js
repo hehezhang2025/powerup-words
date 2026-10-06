@@ -1,6 +1,8 @@
 /* 艾宾浩斯计划层测试（Node 直接运行） */
 const L = require("../miniprogram/utils/logic.js");
-const { WORDS, TOTAL } = require("../miniprogram/data/words.js");
+const bank = require("../miniprogram/utils/bank.js");
+const WORDS = bank.words("pu1");
+const TOTAL = bank.total("pu1");
 
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) pass++; else { fail++; console.error("  ✗ " + msg); } }
@@ -21,7 +23,7 @@ const T0 = "2026-09-28";
 let s = L.createInitialState(T0);
 ok(L.isValidState(s), "初始状态结构有效");
 ok(s.settings.weeklyNew === 35, "默认每周35词");
-ok(TOTAL === 505, "词库505词，实际:" + TOTAL);
+ok(TOTAL === 434, "PU1 词库434词，实际:" + TOTAL);
 ok(L.dailyQuota(s) === 5, "每日新词额度=5");
 
 /* ---------- 第1天：无复习+5个新词 ---------- */

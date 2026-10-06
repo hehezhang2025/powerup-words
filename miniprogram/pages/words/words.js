@@ -1,15 +1,12 @@
 const logic = require("../../utils/logic.js");
 const tts = require("../../utils/tts.js");
-const { WORDS, TOTAL } = require("../../data/words.js");
-
-const ZH_MAP = {};
-WORDS.forEach(w => { ZH_MAP[w.en] = w.zh; });
+const bank = require("../../utils/bank.js");
 
 Page({
   data: {
     learned: 0,
     graduated: 0,
-    total: TOTAL,
+    total: 0,
     reviewing: [],   // 复习中（含掌握度）
     done: [],        // 已毕业
     tab: "reviewing" // reviewing | done
@@ -17,6 +14,7 @@ Page({
 
   onShow() {
     const s = getApp().globalData.state;
+    const ZH_MAP = bank.zhMap();
     const reviewing = [], done = [];
     for (const en of Object.keys(s.words)) {
       const w = s.words[en];
@@ -35,6 +33,7 @@ Page({
     this.setData({
       learned: Object.keys(s.words).length,
       graduated: done.length,
+      total: bank.total(),
       reviewing,
       done
     });

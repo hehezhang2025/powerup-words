@@ -1,6 +1,6 @@
 const logic = require("../../utils/logic.js");
 const backup = require("../../utils/backup.js");
-const { TOTAL } = require("../../data/words.js");
+const bank = require("../../utils/bank.js");
 
 const WEEK_OPTIONS = [7, 14, 21, 35, 49, 70];
 
@@ -14,7 +14,11 @@ Page({
     dayCount: 0,
     learned: 0,
     graduated: 0,
-    total: TOTAL,
+    total: 0,
+    bankId: "",
+    bankName: "",
+    bankDesc: "",
+    bankGroups: [],
     confirmReset: false,
     resetText: "",
     backupPanel: false,
@@ -40,7 +44,56 @@ Page({
       learned: Object.keys(s.words).length,
       graduated,
       schedAhead: logic.scheduleAheadCount(s, today),
-      aheadBy: Math.max(0, logic.aheadBy(s, today))
+      aheadBy: Math.max(0, logic.aheadBy(s, today)),
+      total: bank.total(),
+      bankId: s.bankId,
+      bankName: bank.info().name,
+      bankDesc: bank.info().desc,
+      bankGroups: this.buildBankGroups(s.bankId)
+    });
+  },
+
+  // 词库列表按系列分组，标记当前选中与是否可用
+  buildBankGroups(currentId) {
+    const groups = [];
+    bank.BANKS.forEach((b) => {
+      let g = groups.find((x) => x.group === b.group);
+      if (!g) { g = { group: b.group, items: [] }; groups.push(g); }
+      g.items.push({
+        id: b.id,
+        name: b.name,
+        desc: b.available ? b.desc + "｜" + b.total + " 词" : "整理中…",
+        total: b.total,
+        available: !!b.available,
+        current: b.id === currentId
+      });
+    });
+    return groups;
+  },
+
+  // 切换词库：各库进度独立，切回来还在
+  chooseBank(e) {
+    const id = e.currentTarget.dataset.id;
+    const b = bank.BANK_MAP[id];
+    const s = getApp().globalData.state;
+    if (!b || !b.available) {
+      wx.showToast({ title: "这套词库正在整理中", icon: "none" });
+      return;
+    }
+    if (id === s.bankId) return;
+    const self = this;
+    wx.showModal({
+      title: "切换到《" + b.name + "》？",
+      content: "共 " + b.total + " 词。各词库进度分开记录，切回《" + bank.info().name + "》时原来的进度还在。",
+      confirmText: "切换",
+      cancelText: "取消",
+      success(res) {
+        if (!res.confirm) return;
+        getApp().switchBank(id);
+        getApp().globalData.session = null; // 旧库的进行中流程作废
+        self.onShow();
+        wx.showToast({ title: "已切换", icon: "success" });
+      }
     });
   },
 

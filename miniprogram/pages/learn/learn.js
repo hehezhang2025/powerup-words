@@ -1,6 +1,6 @@
 const logic = require("../../utils/logic.js");
 const tts = require("../../utils/tts.js");
-const { WORDS } = require("../../data/words.js");
+const bank = require("../../utils/bank.js");
 
 Page({
   finished: false, // 是否走完正常流程（finish 置位）；中途返回时不置位
@@ -15,7 +15,7 @@ Page({
   onLoad() {
     const s = getApp().globalData.state;
     const today = logic.todayStr();
-    const plan = logic.getTodayPlan(s, WORDS, today);
+    const plan = logic.getTodayPlan(s, bank.words(), today);
     this.newWords = plan.newWords;
     if (!this.newWords.length) {
       this.backSafe();

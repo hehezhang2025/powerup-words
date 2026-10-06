@@ -1,12 +1,12 @@
 const logic = require("../../utils/logic.js");
 const tts = require("../../utils/tts.js");
-const { WORDS, TOTAL } = require("../../data/words.js");
+const bank = require("../../utils/bank.js");
 
 Page({
   data: {
     streak: 0,
     learned: 0,
-    total: TOTAL,
+    total: 0,
     reviewCount: 0,
     newCount: 0,
     dailyQuota: 5,
@@ -30,6 +30,7 @@ Page({
   refresh() {
     const s = getApp().globalData.state;
     const today = logic.todayStr();
+    const WORDS = bank.words();
     const plan = logic.getTodayPlan(s, WORDS, today);
     this.plan = plan;
     // 预下载今日全部词的发音到本地，播放秒出不卡网络
@@ -43,7 +44,8 @@ Page({
       // 打卡完成且无任何剩余任务才显示"已完成"（加量后新词出现时可继续学习）
       doneToday: plan.doneToday && plan.reviews.length === 0 && plan.newWords.length === 0,
       nothingToday: !plan.doneToday && plan.reviews.length === 0 && plan.newWords.length === 0,
-      nextDueText: this.describeNextDue(s)
+      nextDueText: this.describeNextDue(s),
+      total: bank.total()
     });
   },
 
@@ -80,7 +82,7 @@ Page({
     const sess = app.globalData.session;
     const s = app.globalData.state;
     const today = logic.todayStr();
-    const plan = logic.getTodayPlan(s, WORDS, today);
+    const plan = logic.getTodayPlan(s, bank.words(), today);
 
     if (!sess.reviewDone && plan.reviews.length > 0) {
       wx.navigateTo({ url: "/pages/game/game?mode=review" });

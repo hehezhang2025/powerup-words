@@ -103,6 +103,34 @@
 
 ---
 
+## 词库体系（可切换，进度各自独立）
+
+小程序内置多套生词库，设置页「📚 生词库」随时切换：**每套词库单独记录掌握进度**，切回来接着背，互不影响。
+
+**当前内置**
+
+| 词库 | 系列 | 词数 | 内容 |
+|---|---|---|---|
+| PU 1 · 一级 | 剑桥体系 | 434 | 教材 9 单元核心词 + YLE Starters 考纲扩展，每单元 40+ 词 |
+| 人教 PEP · 三年级 | 校内教材 | 134 | 三年级上下册教材词汇表，单元 key 与课本一一对应（3A-U1…3B-U6） |
+
+PU 2/3/4 与人教 PEP 四/五/六年级已在列表中占位（显示「整理中」），按上述两套的口径陆续补齐。
+
+**文件结构**（新增词库只需动前两层）
+
+```
+miniprogram/data/banks/pu1.js    ← 词库源数据，按 units 组织（唯一需要人写的文件）
+miniprogram/data/banks.js        ← 汇总 + 展平成有序词表（自动，不用改）
+miniprogram/utils/bank.js        ← 运行时取「当前选中词库」的词表（页面统一走这里）
+tests/test-banks.js              ← 词库校验 + 切换测试
+```
+
+**新增一套词库**：复制 `banks/pu1.js` 改 `id/name/group/desc/units` → 在 `banks.js` 的 `RAW` 数组里加一行 `require` → 跑 `node tests/test-banks.js`。校验会强制检查：英文唯一、中文唯一（消消乐配对不能有歧义）、无空字段、单元词数不悬殊。
+
+**进度模型**：`state.bankId` 是当前库；`state.plan/words/extras/stats` 是活动档；切库时整体存入 `state.banks[id]` 再载入目标库。旧备份（version ≤ 2）导入时自动迁移为 pu1 的进度。
+
+> 旧版 505 词（PowerUp L1+L2 合并库）已删除，需要可从 git 历史找回：`git show HEAD~N:miniprogram/data/words.js`。网页版 `src/words.js` 仍沿用旧词库，暂未同步。
+
 ## 常见问题
 
 **Q：还需要开云开发吗？**  

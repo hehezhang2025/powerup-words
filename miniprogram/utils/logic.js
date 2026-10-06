@@ -27,18 +27,66 @@ function daysBetween(a, b) { // b - a 的天数
 }
 
 /* ---------- 初始状态 / 重置 ---------- */
-function createInitialState(today) {
+// 单个词库的进度（切库时整体存取，各库互不干扰）
+function createBankProgress(today) {
   return {
-    version: 2,
-    settings: { weeklyNew: 35 },
     plan: { startDate: today || todayStr() },
     words: {}, // en -> { stage, learnedDate, dueDate, correct, wrong }
     extras: {}, // "YYYY-MM-DD" -> 当日手动加量的新词数（次日自动失效）
+    extraBase: {}, // "YYYY-MM-DD" -> 首次加量时的已学词数（进度超前时算加量余额）
     stats: { streak: 0, bestStreak: 0, totalLearned: 0, lastDoneDate: "", days: [] }
   };
 }
+function createInitialState(today, bankId) {
+  const p = createBankProgress(today);
+  return Object.assign({
+    version: 3,
+    bankId: bankId || "pu1",
+    settings: { weeklyNew: 35 }, // 每周目标全局共享，不随词库切换
+    banks: {}                    // 其他词库的存档：id -> createBankProgress()
+  }, p);
+}
 function isValidState(s) {
   return !!(s && s.settings && s.plan && s.words && s.stats && Array.isArray(s.stats.days));
+}
+
+/* ---------- 词库切换（各库进度独立） ---------- */
+// 把当前活动档存入 banks，再载入目标库；目标库没有记录则从零开始
+function switchBank(state, bankId, today) {
+  if (!state.banks) state.banks = {};
+  if (state.bankId === bankId) return state;
+  const date = today || todayStr();
+  // 1) 存档当前词库
+  state.banks[state.bankId] = {
+    plan: state.plan,
+    words: state.words,
+    extras: state.extras,
+    extraBase: state.extraBase || {},
+    stats: state.stats
+  };
+  // 2) 载入目标词库
+  const saved = state.banks[bankId];
+  const next = saved || createBankProgress(date);
+  state.plan = next.plan;
+  state.words = next.words;
+  state.extras = next.extras || {};
+  state.extraBase = next.extraBase || {};
+  state.stats = next.stats;
+  state.bankId = bankId;
+  return state;
+}
+
+// 兼容旧备份（version ≤2，无 bankId/banks）：视为当前词库的进度
+function migrateState(s, bankId) {
+  if (!s) return s;
+  if (!s.version || s.version < 3) {
+    s.version = 3;
+    s.bankId = s.bankId || bankId || "pu1";
+    s.banks = s.banks || {};
+  }
+  if (!s.banks) s.banks = {};
+  if (!s.extraBase) s.extraBase = {};
+  return s;
 }
 
 /* ---------- 新词额度 ---------- */
@@ -209,7 +257,7 @@ function masteryOf(w) {
 module.exports = {
   INTERVALS, MAX_STAGE,
   todayStr, addDays, daysBetween,
-  createInitialState, isValidState,
+  createInitialState, createBankProgress, isValidState, switchBank, migrateState,
   dailyQuota, earnedQuota, learnedCount, todayNewAllowance, addExtra,
   dueReviews, pickNewWords, getTodayPlan,
   applyAnswer, markNewWordsLearned, checkIn,

@@ -1,5 +1,25 @@
 <view class="page">
 
+  <!-- 词库选择 -->
+  <view class="card">
+    <view class="section-title">📚 生词库</view>
+    <view class="muted line">当前：《{{bankName}}》共 {{total}} 词。{{bankDesc}}</view>
+    <view wx:for="{{bankGroups}}" wx:key="group" class="bank-group">
+      <view class="bank-group-title">{{item.group}}</view>
+      <view
+        wx:for="{{item.items}}"
+        wx:for-item="b"
+        wx:key="id"
+        class="bank-opt {{b.current ? 'active' : ''}} {{b.available ? '' : 'disabled'}}"
+        data-id="{{b.id}}"
+        bindtap="chooseBank">
+        <view class="bank-name">{{b.name}} <text wx:if="{{b.current}}" class="bank-tag">当前</text></view>
+        <view class="muted">{{b.desc}}</view>
+      </view>
+    </view>
+    <view class="muted" style="margin-top:16rpx">切换词库不会丢进度：每套词库单独记录掌握情况，随时切回来接着背。</view>
+  </view>
+
   <!-- 每周新词量 -->
   <view class="card">
     <view class="section-title">🎯 每周新单词目标</view>
