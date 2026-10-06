@@ -1,0 +1,245 @@
+/* 人教 PEP 六年级（三年级起点·上册 6A + 下册 6B）
+ * 口径：教材各单元词汇表逐册整理，跨册重复词只保留首次出现的单元
+ */
+module.exports = {
+  id: "pep6",
+  name: "人教 PEP · 六年级",
+  group: "校内教材",
+  desc: "六年级上下册 · 教材词汇表",
+  units: [
+    {
+      key: "6A-U1",
+      title: "六上 U1 怎么去那儿",
+      words: [
+        { en: "science museum", zh: "科学博物馆" },
+        { en: "post office", zh: "邮局" },
+        { en: "bookstore", zh: "书店" },
+        { en: "cinema", zh: "电影院" },
+        { en: "hospital", zh: "医院" },
+        { en: "crossing", zh: "十字路口" },
+        { en: "turn left", zh: "左转" },
+        { en: "turn right", zh: "右转" },
+        { en: "go straight", zh: "直行" },
+        { en: "near", zh: "靠近" },
+        { en: "far", zh: "远的" },
+        { en: "ask", zh: "问" },
+        { en: "sir", zh: "先生" },
+        { en: "interesting", zh: "有趣的" },
+        { en: "get to", zh: "到达" },
+        { en: "street", zh: "街道" },
+        { en: "follow", zh: "跟随" },
+        { en: "tell", zh: "告诉" },
+        { en: "feature", zh: "特征" },
+        { en: "pizza", zh: "比萨饼" }
+      ]
+    },
+    {
+      key: "6A-U2",
+      title: "六上 U2 上学的方式",
+      words: [
+        { en: "on foot", zh: "步行" },
+        { en: "by bus", zh: "乘公共汽车" },
+        { en: "by plane", zh: "乘飞机" },
+        { en: "by taxi", zh: "乘出租车" },
+        { en: "by ship", zh: "乘船" },
+        { en: "by subway", zh: "乘地铁" },
+        { en: "by train", zh: "乘火车" },
+        { en: "by bike", zh: "乘自行车" },
+        { en: "traffic", zh: "交通" },
+        { en: "traffic light", zh: "交通信号灯" },
+        { en: "traffic rule", zh: "交通规则" },
+        { en: "stop", zh: "停" },
+        { en: "wait", zh: "等候" },
+        { en: "slow down", zh: "慢下来" },
+        { en: "helmet", zh: "头盔" },
+        { en: "must", zh: "必须" },
+        { en: "pay attention to", zh: "注意" },
+        { en: "Germany", zh: "德国" },
+        { en: "Alaska", zh: "阿拉斯加" },
+        { en: "Scotland", zh: "苏格兰" }
+      ]
+    },
+    {
+      key: "6A-U3",
+      title: "六上 U3 周末计划",
+      words: [
+        { en: "visit", zh: "拜访" },
+        { en: "this morning", zh: "今天上午" },
+        { en: "this afternoon", zh: "今天下午" },
+        { en: "this evening", zh: "今天晚上" },
+        { en: "next week", zh: "下周" },
+        { en: "tomorrow", zh: "明天" },
+        { en: "tonight", zh: "今晚" },
+        { en: "take a trip", zh: "去旅行" },
+        { en: "read a magazine", zh: "读杂志" },
+        { en: "go to the cinema", zh: "去看电影" },
+        { en: "comic book", zh: "漫画书" },
+        { en: "post card", zh: "明信片" },
+        { en: "dictionary", zh: "词典" },
+        { en: "word book", zh: "单词本" },
+        { en: "have to", zh: "不得不" },
+        { en: "lesson", zh: "功课" },
+        { en: "dear", zh: "亲爱的" },
+        { en: "together", zh: "一起儿" }
+      ]
+    },
+    {
+      key: "6A-U4",
+      title: "六上 U4 我有一个笔友",
+      words: [
+        { en: "hobby", zh: "爱好" },
+        { en: "ride a bike", zh: "骑自行车" },
+        { en: "dive", zh: "跳水" },
+        { en: "play the violin", zh: "拉小提琴" },
+        { en: "make kites", zh: "制作风筝" },
+        { en: "collect stamps", zh: "集邮" },
+        { en: "pen pal", zh: "笔友" },
+        { en: "dancing", zh: "跳舞" },
+        { en: "singing", zh: "唱歌" },
+        { en: "reading stories", zh: "读故事" },
+        { en: "playing football", zh: "踢足球" },
+        { en: "doing kung fu", zh: "练功夫" },
+        { en: "go hiking", zh: "去远足" },
+        { en: "cook Chinese food", zh: "做中餐" },
+        { en: "live", zh: "居住" },
+        { en: "teach", zh: "教" },
+        { en: "watch", zh: "观看" },
+        { en: "does", zh: "做(三单)" }
+      ]
+    },
+    {
+      key: "6A-U5",
+      title: "六上 U5 他是做什么的",
+      words: [
+        { en: "factory worker", zh: "工厂工人" },
+        { en: "postman", zh: "邮递员" },
+        { en: "businessman", zh: "商人" },
+        { en: "police officer", zh: "警察" },
+        { en: "fisherman", zh: "渔民" },
+        { en: "scientist", zh: "科学家" },
+        { en: "pilot", zh: "飞行员" },
+        { en: "coach", zh: "教练" },
+        { en: "reporter", zh: "记者" },
+        { en: "secretary", zh: "秘书" },
+        { en: "head teacher", zh: "校长" },
+        { en: "university", zh: "大学" },
+        { en: "country", zh: "国家" },
+        { en: "sea", zh: "大海" },
+        { en: "use", zh: "使用" },
+        { en: "money", zh: "钱" }
+      ]
+    },
+    {
+      key: "6A-U6",
+      title: "六上 U6 你感觉如何",
+      words: [
+        { en: "angry", zh: "生气的" },
+        { en: "afraid", zh: "害怕的" },
+        { en: "sad", zh: "难过的" },
+        { en: "worried", zh: "担心的" },
+        { en: "happy", zh: "高兴的" },
+        { en: "wear", zh: "穿着" },
+        { en: "should", zh: "应该" },
+        { en: "deep breath", zh: "深呼吸" },
+        { en: "see a doctor", zh: "看医生" },
+        { en: "wear warm clothes", zh: "穿暖和的衣服" },
+        { en: "do more exercise", zh: "多做运动" },
+        { en: "count to ten", zh: "数到十" },
+        { en: "chase", zh: "追赶" },
+        { en: "mice", zh: "老鼠(复数)" },
+        { en: "hurt", zh: "受伤" },
+        { en: "ill", zh: "生病的" },
+        { en: "laugh", zh: "笑" },
+        { en: "feel", zh: "感觉" }
+      ]
+    },
+    {
+      key: "6B-U1",
+      title: "六下 U1 你有多高",
+      words: [
+        { en: "taller", zh: "更高的" },
+        { en: "shorter", zh: "更矮的" },
+        { en: "longer", zh: "更长的" },
+        { en: "bigger", zh: "更大的" },
+        { en: "smaller", zh: "更小的" },
+        { en: "stronger", zh: "更强壮的" },
+        { en: "thinner", zh: "更瘦的" },
+        { en: "heavier", zh: "更重的" },
+        { en: "older", zh: "更年长的" },
+        { en: "younger", zh: "更年轻的" },
+        { en: "how tall", zh: "多高" },
+        { en: "how heavy", zh: "多重" },
+        { en: "how old", zh: "多大" },
+        { en: "meter", zh: "米" },
+        { en: "ton", zh: "吨" },
+        { en: "kilogram", zh: "千克" },
+        { en: "dinosaur", zh: "恐龙" },
+        { en: "than", zh: "比" }
+      ]
+    },
+    {
+      key: "6B-U2",
+      title: "六下 U2 上个周末",
+      words: [
+        { en: "cleaned my room", zh: "打扫了房间" },
+        { en: "washed my clothes", zh: "洗了衣服" },
+        { en: "stayed at home", zh: "待在家里" },
+        { en: "watched TV", zh: "看了电视" },
+        { en: "had a cold", zh: "感冒了" },
+        { en: "read a book", zh: "读了书" },
+        { en: "saw a film", zh: "看了电影" },
+        { en: "went boating", zh: "去划了船" },
+        { en: "slept", zh: "睡了觉" },
+        { en: "last weekend", zh: "上个周末" },
+        { en: "yesterday", zh: "昨天" },
+        { en: "before", zh: "以前" }
+      ]
+    },
+    {
+      key: "6B-U3",
+      title: "六下 U3 你去了哪里",
+      words: [
+        { en: "went camping", zh: "去野营了" },
+        { en: "went fishing", zh: "去钓鱼了" },
+        { en: "rode a horse", zh: "骑了马" },
+        { en: "rode a bike", zh: "骑了自行车" },
+        { en: "took pictures", zh: "拍了照片" },
+        { en: "bought gifts", zh: "买了礼物" },
+        { en: "ate fresh food", zh: "吃了新鲜食物" },
+        { en: "fell off", zh: "摔了下来" },
+        { en: "hurt my foot", zh: "伤了脚" },
+        { en: "could", zh: "能(过去式)" },
+        { en: "till", zh: "直到" },
+        { en: "beach", zh: "海滩" },
+        { en: "basket", zh: "篮子" },
+        { en: "part", zh: "部分" },
+        { en: "licked", zh: "舔了" },
+        { en: "laughed", zh: "笑了" }
+      ]
+    },
+    {
+      key: "6B-U4",
+      title: "六下 U4 那时与现在",
+      words: [
+        { en: "dining hall", zh: "饭厅" },
+        { en: "grass", zh: "草地" },
+        { en: "gym", zh: "体育馆" },
+        { en: "ago", zh: "…以前" },
+        { en: "cycling", zh: "骑自行车运动" },
+        { en: "go cycling", zh: "去骑自行车" },
+        { en: "ice-skate", zh: "滑冰" },
+        { en: "badminton", zh: "羽毛球运动" },
+        { en: "star", zh: "星" },
+        { en: "easy", zh: "容易的" },
+        { en: "look up", zh: "查阅" },
+        { en: "Internet", zh: "互联网" },
+        { en: "different", zh: "不同的" },
+        { en: "active", zh: "活跃的" },
+        { en: "race", zh: "赛跑" },
+        { en: "nothing", zh: "没有什么" },
+        { en: "thought", zh: "想(过去式)" },
+        { en: "felt", zh: "感觉(过去式)" }
+      ]
+    }
+  ]
+};

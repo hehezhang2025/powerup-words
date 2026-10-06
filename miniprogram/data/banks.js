@@ -2,20 +2,19 @@
  * 每词: { en, zh, unit, order }
  * available=false 的词库仅占位展示（整理中），不可选
  */
+// 全部 8 套词库（新增词库：复制一份 banks/*.js 改内容，再在这里加一行 require）
 const RAW = [
   require("./banks/pu1.js"),
-  require("./banks/pep3.js")
+  require("./banks/pu2.js"),
+  require("./banks/pu3.js"),
+  require("./banks/pu4.js"),
+  require("./banks/pep3.js"),
+  require("./banks/pep4.js"),
+  require("./banks/pep5.js"),
+  require("./banks/pep6.js")
 ];
 
-// 整理中的词库（先占位，避免用户以为漏了）
-const PLANNED = [
-  { id: "pu2", name: "PU 2 · 二级", group: "剑桥体系", desc: "A1 · YLE Movers｜整理中" },
-  { id: "pu3", name: "PU 3 · 三级", group: "剑桥体系", desc: "A1 · YLE Movers｜整理中" },
-  { id: "pu4", name: "PU 4 · 四级", group: "剑桥体系", desc: "A2 · YLE Flyers｜整理中" },
-  { id: "pep4", name: "人教 PEP · 四年级", group: "校内教材", desc: "四年级上下册｜整理中" },
-  { id: "pep5", name: "人教 PEP · 五年级", group: "校内教材", desc: "五年级上下册｜整理中" },
-  { id: "pep6", name: "人教 PEP · 六年级", group: "校内教材", desc: "六年级上下册｜整理中" }
-];
+const PLANNED = []; // 暂无待整理词库
 
 function flatten(bank) {
   const words = [];
