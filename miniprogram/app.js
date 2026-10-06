@@ -14,12 +14,11 @@ App({
       local = logic.createInitialState(logic.todayStr());
       storage.saveLocal(local);
     } else {
-      local = logic.migrateState(local); // 旧版本备份（无 bankId）升级
+      local = logic.migrateState(local); // 旧版本备份（单选 bankId）升级为多选 bankIds
     }
-    // 词库已被移除时（如旧版合并库），回退到默认库
-    if (!bank.BANK_MAP[local.bankId] || !bank.BANK_MAP[local.bankId].available) {
-      logic.switchBank(local, bank.DEFAULT_BANK, logic.todayStr());
-    }
+    // 过滤掉已下线/整理中的词库，全没了就回默认库
+    local.bankIds = local.bankIds.filter((id) => bank.BANK_MAP[id] && bank.BANK_MAP[id].available);
+    if (!local.bankIds.length) local.bankIds = [bank.DEFAULT_BANK];
     this.globalData.state = local;
   },
 
@@ -34,7 +33,7 @@ App({
     this.saveState();
   },
 
-  // 重置：只清空当前词库的进度，其他词库不受影响
+  // 重置：清空全部学习进度（各词库共享一个进度池，重置后都从头开始）
   resetState() {
     const s = this.globalData.state;
     const fresh = logic.createBankProgress(logic.todayStr());
@@ -43,16 +42,18 @@ App({
     s.extras = fresh.extras;
     s.extraBase = fresh.extraBase;
     s.stats = fresh.stats;
-    if (s.banks) delete s.banks[s.bankId];
     this.saveState();
   },
 
-  // 切换词库：各库进度独立保存，切回来还在
-  switchBank(bankId) {
+  // 勾选 / 取消一套词库（可多选）：取消不丢进度，重新勾回来接着背
+  toggleBank(bankId) {
     const b = bank.BANK_MAP[bankId];
     if (!b || !b.available) return false;
-    logic.switchBank(this.globalData.state, bankId, logic.todayStr());
-    this.saveState();
-    return true;
+    const changed = logic.toggleBank(this.globalData.state, bankId);
+    if (changed) {
+      this.saveState();
+      this.globalData.session = null; // 词表变了，进行中的流程作废
+    }
+    return changed;
   }
 });

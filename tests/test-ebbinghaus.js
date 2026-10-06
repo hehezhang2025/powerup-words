@@ -1,8 +1,8 @@
 /* 艾宾浩斯计划层测试（Node 直接运行） */
 const L = require("../miniprogram/utils/logic.js");
 const bank = require("../miniprogram/utils/bank.js");
-const WORDS = bank.words("pu1");
-const TOTAL = bank.total("pu1");
+const WORDS = bank.wordsOf(["pu1"]);
+const TOTAL = bank.total(["pu1"]);
 
 let pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) pass++; else { fail++; console.error("  ✗ " + msg); } }

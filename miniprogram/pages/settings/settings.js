@@ -15,9 +15,8 @@ Page({
     learned: 0,
     graduated: 0,
     total: 0,
-    bankId: "",
     bankName: "",
-    bankDesc: "",
+    bankCount: 0,
     bankGroups: [],
     confirmReset: false,
     resetText: "",
@@ -41,20 +40,19 @@ Page({
       streak: s.stats.streak,
       bestStreak: s.stats.bestStreak,
       dayCount: s.stats.days.length,
-      learned: Object.keys(s.words).length,
+      learned: logic.learnedInPool(s, bank.words()), // 只算已勾选词库里的已学词
       graduated,
       schedAhead: logic.scheduleAheadCount(s, today),
       aheadBy: Math.max(0, logic.aheadBy(s, today)),
       total: bank.total(),
-      bankId: s.bankId,
       bankName: bank.info().name,
-      bankDesc: bank.info().desc,
-      bankGroups: this.buildBankGroups(s.bankId)
+      bankCount: bank.info().count,
+      bankGroups: this.buildBankGroups(s.bankIds)
     });
   },
 
-  // 词库列表按系列分组，标记当前选中与是否可用
-  buildBankGroups(currentId) {
+  // 词库列表按系列分组，标记是否已勾选 / 是否可用
+  buildBankGroups(ids) {
     const groups = [];
     bank.BANKS.forEach((b) => {
       let g = groups.find((x) => x.group === b.group);
@@ -65,35 +63,31 @@ Page({
         desc: b.available ? b.desc + "｜" + b.total + " 词" : "整理中…",
         total: b.total,
         available: !!b.available,
-        current: b.id === currentId
+        checked: ids.indexOf(b.id) >= 0
       });
     });
     return groups;
   },
 
-  // 切换词库：各库进度独立，切回来还在
-  chooseBank(e) {
+  // 勾选 / 取消一套词库（可多选，至少留一套）
+  toggleBank(e) {
     const id = e.currentTarget.dataset.id;
     const b = bank.BANK_MAP[id];
-    const s = getApp().globalData.state;
     if (!b || !b.available) {
       wx.showToast({ title: "这套词库正在整理中", icon: "none" });
       return;
     }
-    if (id === s.bankId) return;
-    const self = this;
-    wx.showModal({
-      title: "切换到《" + b.name + "》？",
-      content: "共 " + b.total + " 词。各词库进度分开记录，切回《" + bank.info().name + "》时原来的进度还在。",
-      confirmText: "切换",
-      cancelText: "取消",
-      success(res) {
-        if (!res.confirm) return;
-        getApp().switchBank(id);
-        getApp().globalData.session = null; // 旧库的进行中流程作废
-        self.onShow();
-        wx.showToast({ title: "已切换", icon: "success" });
-      }
+    const changed = getApp().toggleBank(id);
+    if (!changed) {
+      wx.showToast({ title: "至少要留一套词库", icon: "none" });
+      return;
+    }
+    const on = getApp().globalData.state.bankIds.indexOf(id) >= 0;
+    this.onShow();
+    wx.showToast({
+      title: (on ? "已加入" : "已移除") + "，共 " + bank.total() + " 词",
+      icon: "none",
+      duration: 2000
     });
   },
 

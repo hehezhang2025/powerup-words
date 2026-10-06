@@ -16,8 +16,11 @@ Page({
     const s = getApp().globalData.state;
     const ZH_MAP = bank.zhMap();
     const reviewing = [], done = [];
-    for (const en of Object.keys(s.words)) {
-      const w = s.words[en];
+    // 只显示当前已勾选词库里的词（取消勾选的库先不干扰家长查看）
+    for (const word of bank.words()) {
+      const w = s.words[word.en];
+      if (!w) continue;
+      const en = word.en;
       const item = {
         en,
         zh: ZH_MAP[en] || "",
@@ -31,7 +34,7 @@ Page({
     reviewing.sort((a, b) => a.mastery - b.mastery); // 最弱的排前面，方便家长盯
     done.sort((a, b) => b.correct - a.correct);
     this.setData({
-      learned: Object.keys(s.words).length,
+      learned: reviewing.length + done.length,
       graduated: done.length,
       total: bank.total(),
       reviewing,

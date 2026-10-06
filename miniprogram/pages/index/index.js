@@ -37,7 +37,7 @@ Page({
     tts.preload(plan.reviews.map(r => r.en).concat(plan.newWords.map(w => w.en)));
     this.setData({
       streak: s.stats.streak,
-      learned: logic.learnedCount(s),
+      learned: logic.learnedInPool(s, WORDS),
       reviewCount: plan.reviews.length,
       newCount: plan.newWords.length,
       dailyQuota: plan.dailyQuota,

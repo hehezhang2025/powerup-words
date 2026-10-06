@@ -1,23 +1,25 @@
 <view class="page">
 
-  <!-- 词库选择 -->
+  <!-- 词库选择（可多选） -->
   <view class="card">
-    <view class="section-title">📚 生词库</view>
-    <view class="muted line">当前：《{{bankName}}》共 {{total}} 词。{{bankDesc}}</view>
+    <view class="section-title">📚 生词库（可多选）</view>
+    <view class="muted line">已选 {{bankCount}} 套，合并共 {{total}} 词（重复的词自动去重，只学一次）。</view>
     <view wx:for="{{bankGroups}}" wx:key="group" class="bank-group">
       <view class="bank-group-title">{{item.group}}</view>
       <view
         wx:for="{{item.items}}"
         wx:for-item="b"
         wx:key="id"
-        class="bank-opt {{b.current ? 'active' : ''}} {{b.available ? '' : 'disabled'}}"
+        class="bank-opt {{b.checked ? 'active' : ''}} {{b.available ? '' : 'disabled'}}"
         data-id="{{b.id}}"
-        bindtap="chooseBank">
-        <view class="bank-name">{{b.name}} <text wx:if="{{b.current}}" class="bank-tag">当前</text></view>
+        bindtap="toggleBank">
+        <view class="bank-name">
+          <text class="bank-check">{{b.checked ? "☑" : "☐"}}</text>{{b.name}}
+        </view>
         <view class="muted">{{b.desc}}</view>
       </view>
     </view>
-    <view class="muted" style="margin-top:16rpx">切换词库不会丢进度：每套词库单独记录掌握情况，随时切回来接着背。</view>
+    <view class="muted" style="margin-top:16rpx">取消勾选不会删进度：那套词的掌握情况仍保留着，重新勾上就接着背。至少要留一套。</view>
   </view>
 
   <!-- 每周新词量 -->

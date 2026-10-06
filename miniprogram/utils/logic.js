@@ -37,54 +37,51 @@ function createBankProgress(today) {
     stats: { streak: 0, bestStreak: 0, totalLearned: 0, lastDoneDate: "", days: [] }
   };
 }
-function createInitialState(today, bankId) {
+function createInitialState(today, bankIds) {
   const p = createBankProgress(today);
   return Object.assign({
-    version: 3,
-    bankId: bankId || "pu1",
-    settings: { weeklyNew: 35 }, // 每周目标全局共享，不随词库切换
-    banks: {}                    // 其他词库的存档：id -> createBankProgress()
+    version: 4,
+    bankIds: (bankIds && bankIds.length ? bankIds : ["pu1"]).slice(), // 可多选，按顺序合并
+    settings: { weeklyNew: 35 } // 每周目标全局共享
   }, p);
 }
 function isValidState(s) {
   return !!(s && s.settings && s.plan && s.words && s.stats && Array.isArray(s.stats.days));
 }
 
-/* ---------- 词库切换（各库进度独立） ---------- */
-// 把当前活动档存入 banks，再载入目标库；目标库没有记录则从零开始
-function switchBank(state, bankId, today) {
-  if (!state.banks) state.banks = {};
-  if (state.bankId === bankId) return state;
-  const date = today || todayStr();
-  // 1) 存档当前词库
-  state.banks[state.bankId] = {
-    plan: state.plan,
-    words: state.words,
-    extras: state.extras,
-    extraBase: state.extraBase || {},
-    stats: state.stats
-  };
-  // 2) 载入目标词库
-  const saved = state.banks[bankId];
-  const next = saved || createBankProgress(date);
-  state.plan = next.plan;
-  state.words = next.words;
-  state.extras = next.extras || {};
-  state.extraBase = next.extraBase || {};
-  state.stats = next.stats;
-  state.bankId = bankId;
-  return state;
+/* ---------- 词库多选：勾选 / 取消 ---------- */
+// 勾选集合变化后调用：返回是否变化。取消勾选不会删除已学进度，重新勾回来接着背
+function toggleBank(state, bankId) {
+  if (!Array.isArray(state.bankIds)) state.bankIds = [bankId || "pu1"];
+  const i = state.bankIds.indexOf(bankId);
+  if (i >= 0) {
+    if (state.bankIds.length <= 1) return false; // 至少保留一套
+    state.bankIds.splice(i, 1);
+  } else {
+    state.bankIds.push(bankId);
+  }
+  return true;
 }
 
-// 兼容旧备份（version ≤2，无 bankId/banks）：视为当前词库的进度
-function migrateState(s, bankId) {
+// 兼容旧备份：version ≤3 的单选 bankId / banks 存档 → version 4 的 bankIds
+function migrateState(s) {
   if (!s) return s;
-  if (!s.version || s.version < 3) {
-    s.version = 3;
-    s.bankId = s.bankId || bankId || "pu1";
-    s.banks = s.banks || {};
+  if (!s.version || s.version < 4) {
+    const ids = Array.isArray(s.bankIds) && s.bankIds.length ? s.bankIds : (s.bankId ? [s.bankId] : ["pu1"]);
+    // 旧版把各库进度分开存档：合并成一份，取其中已有进度的库作为勾选
+    if (s.banks && Object.keys(s.banks).length) {
+      const saved = Object.keys(s.banks).filter((id) => s.banks[id] && Object.keys(s.banks[id].words || {}).length);
+      if (saved.length) {
+        saved.forEach((id) => { if (ids.indexOf(id) < 0) ids.push(id); });
+        // 用最后使用的那份进度覆盖顶层（旧版顶层是最后一次用的库）
+      }
+      delete s.banks;
+    }
+    s.bankIds = ids;
+    delete s.bankId;
+    s.version = 4;
   }
-  if (!s.banks) s.banks = {};
+  if (!Array.isArray(s.bankIds) || !s.bankIds.length) s.bankIds = ["pu1"];
   if (!s.extraBase) s.extraBase = {};
   return s;
 }
@@ -102,10 +99,22 @@ function earnedQuota(state, today) {
 function learnedCount(state) {
   return Object.keys(state.words).length;
 }
+// 当前学习池（已勾选词库合并后）里已学的词数。
+// 多选场景下若取消勾选某套，那套的进度仍留在 state.words 里，但不计入额度，
+// 否则会把新词额度白白吃掉（重新勾回来进度还在，也不会重复学）
+function learnedInPool(state, allWords) {
+  if (!allWords) return learnedCount(state);
+  let n = 0;
+  for (let i = 0; i < allWords.length; i++) {
+    if (state.words[allWords[i].en]) n++;
+  }
+  return n;
+}
 // 今日可学新词数：累计欠账补发，但单日不超过额度×2；extras 为当日手动加量
-function todayNewAllowance(state, today, remainingPool) {
+function todayNewAllowance(state, today, remainingPool, allWords) {
+  const learned = learnedInPool(state, allWords);
   const extra = (state.extras && state.extras[today]) || 0;
-  const allow = earnedQuota(state, today) + extra - learnedCount(state);
+  const allow = earnedQuota(state, today) + extra - learned;
   const cap = dailyQuota(state) * 2 + extra;
   const pool = remainingPool == null ? Infinity : remainingPool;
   let n = Math.max(0, Math.min(allow, cap, pool));
@@ -114,7 +123,7 @@ function todayNewAllowance(state, today, remainingPool) {
   // 用 extraBase 记录首次加量时的已学词数，扣掉本次已用掉的量，避免连点两次一次给 10 个
   if (n === 0 && extra > 0) {
     const base = state.extraBase && state.extraBase[today];
-    const used = base == null ? 0 : Math.max(0, learnedCount(state) - base);
+    const used = base == null ? 0 : Math.max(0, learned - base);
     n = Math.min(Math.max(0, extra - used), pool);
   }
   return n;
@@ -153,8 +162,8 @@ function pickNewWords(state, allWords, n) {
 }
 function getTodayPlan(state, allWords, today) {
   const reviews = dueReviews(state, today);
-  const remaining = allWords.length - learnedCount(state);
-  const newCount = todayNewAllowance(state, today, remaining);
+  const remaining = allWords.length - learnedInPool(state, allWords);
+  const newCount = todayNewAllowance(state, today, remaining, allWords);
   const newWords = pickNewWords(state, allWords, newCount);
   return {
     reviews,            // [{en, stage, dueDate}] 全量到期复习
@@ -257,8 +266,8 @@ function masteryOf(w) {
 module.exports = {
   INTERVALS, MAX_STAGE,
   todayStr, addDays, daysBetween,
-  createInitialState, createBankProgress, isValidState, switchBank, migrateState,
-  dailyQuota, earnedQuota, learnedCount, todayNewAllowance, addExtra,
+  createInitialState, createBankProgress, isValidState, toggleBank, migrateState,
+  dailyQuota, earnedQuota, learnedCount, learnedInPool, todayNewAllowance, addExtra,
   dueReviews, pickNewWords, getTodayPlan,
   applyAnswer, markNewWordsLearned, checkIn,
   masteryOf,

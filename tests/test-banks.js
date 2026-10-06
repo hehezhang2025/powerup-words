@@ -45,40 +45,72 @@ AVAILABLE.forEach((b) => {
   ok(max <= min * 3, "单元词数不悬殊 min=" + min + " max=" + max);
 });
 
-/* ---------- 多词库进度独立 ---------- */
-section("词库切换与进度独立");
-let s = L.createInitialState(T0, "pu1");
-const pu1Words = bank.words("pu1");
-const pep3Words = bank.words("pep3");
+/* ---------- 多选合并 ---------- */
+section("多选合并与去重");
+const pu1Words = bank.wordsOf(["pu1"]);
+const pep3Words = bank.wordsOf(["pep3"]);
+const merged = bank.wordsOf(["pu1", "pep3"]);
+ok(merged.length > pu1Words.length, "合并后多于单套，实际:" + merged.length);
+ok(merged.length < pu1Words.length + pep3Words.length, "重叠词已去重，合并" + merged.length + " < " + (pu1Words.length + pep3Words.length));
+const mEn = {}, mZh = {}, dEn = [], dZh = [];
+merged.forEach((w) => {
+  if (mEn[w.en]) dEn.push(w.en);
+  mEn[w.en] = 1;
+  if (mZh[w.zh]) dZh.push(w.zh);
+  mZh[w.zh] = 1;
+});
+ok(dEn.length === 0, "合并后英文唯一，重复:" + dEn.join(", "));
+ok(dZh.length === 0, "合并后中文唯一（消消乐不能歧义），重复:" + dZh.join(", "));
+ok(bank.info(["pu1", "pep3"]).count === 2, "info 报告已选 2 套");
+ok(bank.info(["pu1"]).name.indexOf("PU 1") >= 0, "单套时显示词库名");
 
-// 在 pu1 学 5 个词
-let plan = L.getTodayPlan(s, pu1Words, T0);
+/* ---------- 勾选 / 取消，进度不丢 ---------- */
+section("勾选取消与进度保留");
+let s = L.createInitialState(T0, ["pu1"]);
+ok(s.bankIds.length === 1 && s.bankIds[0] === "pu1", "初始勾选 pu1");
+
+// 加选 pep3
+ok(L.toggleBank(s, "pep3") === true, "加选 pep3 成功");
+ok(s.bankIds.join(",") === "pu1,pep3", "勾选顺序保持，实际:" + s.bankIds.join(","));
+
+// 在合并池里学 5 个词（来自 pu1）
+let plan = L.getTodayPlan(s, merged, T0);
 L.markNewWordsLearned(s, plan.newWords.map((w) => w.en), T0);
 L.checkIn(s, T0);
-ok(L.learnedCount(s) === 5, "pu1 学 5 词，实际:" + L.learnedCount(s));
-ok(s.stats.streak === 1, "pu1 打卡 streak=1");
+ok(L.learnedInPool(s, merged) === 5, "合并池学过 5 词，实际:" + L.learnedInPool(s, merged));
 
-// 切到 pep3：进度应为空
-L.switchBank(s, "pep3", T0);
-ok(s.bankId === "pep3", "已切到 pep3");
-ok(L.learnedCount(s) === 0, "pep3 从零开始，实际:" + L.learnedCount(s));
-ok(s.stats.streak === 0, "pep3 打卡独立，streak=0");
+// 再学 3 个 pep3 独有的词（pu1 里没有，取消 pep3 后就不在池内）
+const restWords = merged.filter((w) => !s.words[w.en] && w.bank === "pep3").slice(0, 3);
+L.markNewWordsLearned(s, restWords.map((w) => w.en), T0);
+ok(L.learnedInPool(s, merged) === 8, "合并池学过 8 词，实际:" + L.learnedInPool(s, merged));
+const globalCount = L.learnedCount(s);
 
-// 在 pep3 学 3 个词
-plan = L.getTodayPlan(s, pep3Words, T0);
-L.markNewWordsLearned(s, plan.newWords.slice(0, 3).map((w) => w.en), T0);
-ok(L.learnedCount(s) === 3, "pep3 学 3 词，实际:" + L.learnedCount(s));
+// 取消 pep3：池内计数减少，但进度一条不丢
+L.toggleBank(s, "pep3");
+const onlyPu1 = bank.wordsOf(["pu1"]);
+ok(s.bankIds.join(",") === "pu1", "已取消 pep3");
+ok(L.learnedCount(s) === globalCount, "取消勾选不删进度，总数仍 " + globalCount + "，实际:" + L.learnedCount(s));
+ok(L.learnedInPool(s, onlyPu1) < globalCount, "池内计数按已勾选库算，实际:" + L.learnedInPool(s, onlyPu1));
 
-// 切回 pu1：进度原样恢复
-L.switchBank(s, "pu1", T0);
-ok(L.learnedCount(s) === 5, "切回 pu1 进度仍在，实际:" + L.learnedCount(s));
-ok(s.words[pu1Words[0].en] && s.words[pu1Words[0].en].stage === 0, "pu1 词记录完整");
-ok(s.stats.streak === 1, "pu1 打卡记录完整");
+// 取消到只剩一套时不能再取消
+ok(L.toggleBank(s, "pu1") === false, "最后一套不允许取消");
+ok(s.bankIds.length === 1, "仍保留 1 套");
 
-// 再切 pep3：3 词也在
-L.switchBank(s, "pep3", T0);
-ok(L.learnedCount(s) === 3, "pep3 进度也在，实际:" + L.learnedCount(s));
-ok(Object.keys(s.banks).length >= 2, "存档里有两套库的进度，实际:" + Object.keys(s.banks).length);
+// 重新勾回 pep3：进度原样恢复
+L.toggleBank(s, "pep3");
+ok(L.learnedInPool(s, merged) === 8, "重新勾回后进度恢复 8 词，实际:" + L.learnedInPool(s, merged));
+
+// 取消勾选后，新词额度不该被未勾选库的已学词吃掉
+section("取消勾选不影响新词额度");
+let s2 = L.createInitialState(T0, ["pu1", "pep3"]);
+const pool2 = bank.wordsOf(["pu1", "pep3"]);
+let p2 = L.getTodayPlan(s2, pool2, T0);
+L.markNewWordsLearned(s2, p2.newWords.map((w) => w.en), T0);
+const before = L.todayNewAllowance(s2, T0, pool2.length - L.learnedInPool(s2, pool2), pool2);
+L.toggleBank(s2, "pep3");
+const pool3 = bank.wordsOf(["pu1"]);
+const after = L.todayNewAllowance(s2, T0, pool3.length - L.learnedInPool(s2, pool3), pool3);
+ok(after >= before, "取消后新词额度不减少 before=" + before + " after=" + after);
 
 /* ---------- 旧备份迁移 ---------- */
 section("旧备份迁移");
@@ -89,12 +121,25 @@ const old = {
   words: { hello: { stage: 0, learnedDate: T0, dueDate: "2026-10-07", correct: 0, wrong: 0 } },
   stats: { streak: 1, bestStreak: 1, totalLearned: 1, lastDoneDate: T0, days: [T0] }
 };
-const mig = L.migrateState(JSON.parse(JSON.stringify(old)), "pu1");
-ok(mig.version === 3, "升级到 version 3");
-ok(mig.bankId === "pu1", "补上 bankId，实际:" + mig.bankId);
-ok(typeof mig.banks === "object", "补上 banks 存档");
+const mig = L.migrateState(JSON.parse(JSON.stringify(old)));
+ok(mig.version === 4, "升级到 version 4，实际:" + mig.version);
+ok(mig.bankIds.length === 1 && mig.bankIds[0] === "pu1", "补上 bankIds，实际:" + JSON.stringify(mig.bankIds));
+ok(mig.bankId === undefined, "清掉旧的 bankId 字段");
 ok(L.isValidState(mig), "迁移后仍是合法状态");
 ok(mig.words["hello"] && mig.words["hello"].stage === 0, "旧进度保留");
+
+// 旧版单选存档（version 3）也要能迁
+const v3 = {
+  version: 3, bankId: "pep3",
+  settings: { weeklyNew: 35 }, plan: { startDate: T0 },
+  words: {}, extras: {}, extraBase: {},
+  stats: { streak: 0, bestStreak: 0, totalLearned: 0, lastDoneDate: "", days: [] },
+  banks: { pu1: { words: { apple: { stage: 1, correct: 1, wrong: 0 } } } }
+};
+const mig3 = L.migrateState(JSON.parse(JSON.stringify(v3)));
+ok(mig3.bankIds.indexOf("pep3") >= 0, "保留原选中 pep3，实际:" + JSON.stringify(mig3.bankIds));
+ok(mig3.bankIds.indexOf("pu1") >= 0, "有进度的 pu1 也并入勾选");
+ok(mig3.banks === undefined, "旧的 banks 存档已清理");
 
 /* ---------- 汇总 ---------- */
 console.log("\n==============================");
